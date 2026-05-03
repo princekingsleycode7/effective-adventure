@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DrPeptide — Test Report System</title>
+  <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --g: #4caf50;
+      --g-light: #e8f5e9;
+      --g-border: #c8e6c9;
+      --font: 'Jost', 'Trebuchet MS', sans-serif;
+      --bg: #f2f4f2;
+      --white: #fff;
+      --shadow: 0 2px 16px rgba(0,0,0,0.07);
+      --shadow-sm: 0 1px 6px rgba(0,0,0,0.06);
+    }
+
+    body { font-family: var(--font); background: var(--bg); min-height: 100vh; color: #222; }
+
+    /* ── NAV ── */
+    .nav {
+      background: var(--white);
+      border-bottom: 2px solid var(--g);
+      padding: 0 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 60px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 1px 8px rgba(0,0,0,0.07);
+    }
+    .nav-brand { display: flex; align-items: center; gap: 10px; }
+    .nav-brand-name { font-weight: 900; font-size: 16px; color: #1a1a1a; letter-spacing: 3px; }
+    .nav-tabs { display: flex; gap: 8px; }
+
+    /* ── BUTTONS ── */
+    .btn {
+      background: var(--g); color: #fff; border: none;
+      padding: 10px 26px; border-radius: 6px;
+      font-weight: 700; font-size: 14px; cursor: pointer;
+      font-family: var(--font); transition: opacity 0.15s;
+    }
+    .btn:hover { opacity: 0.88; }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .btn-sec {
+      background: #f0f0f0; color: #333; border: none;
+      padding: 10px 20px; border-radius: 6px;
+      font-weight: 600; font-size: 13px; cursor: pointer;
+      font-family: var(--font); transition: background 0.15s;
+    }
+    .btn-sec:hover { background: #e5e5e5; }
+    .btn-sec.active { background: var(--g-light); color: var(--g); }
+
+    .btn-danger {
+      background: #fdecea; color: #c62828; border: none;
+      padding: 7px 14px; border-radius: 5px;
+      font-weight: 600; font-size: 12px; cursor: pointer;
+      font-family: var(--font); transition: background 0.15s;
+    }
+    .btn-danger:hover { background: #fbc0bc; }
+
+    .btn-sm { padding: 6px 14px !important; font-size: 12px !important; }
+
+    /* ── LAYOUT ── */
+    .container { max-width: 880px; margin: 0 auto; padding: 36px 16px; }
+
+    .card {
+      background: var(--white);
+      border-radius: 12px;
+      padding: 40px 48px;
+      box-shadow: var(--shadow);
+    }
+
+    /* ── FORMS ── */
+    .input {
+      border: 1px solid #ddd; border-radius: 5px;
+      padding: 9px 12px; font-size: 13px; width: 100%;
+      outline: none; font-family: var(--font);
+      transition: border-color 0.15s;
+    }
+    .input:focus { border-color: var(--g); }
+    textarea.input { height: 64px; resize: vertical; }
+
+    .lbl { font-size: 12px; font-weight: 700; color: #555; margin-bottom: 4px; display: block; }
+
+    .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); gap: 14px; }
+
+    fieldset { border: 1px solid var(--g-border); border-radius: 8px; padding: 16px 20px; margin-bottom: 24px; }
+    legend { color: var(--g); font-weight: 800; font-size: 12px; padding: 0 8px; letter-spacing: 1px; }
+
+    /* ── VIEWS ── */
+    .view { display: none; }
+    .view.active { display: block; }
+
+    /* ── ALERTS ── */
+    .alert-error { margin-top: 16px; color: #c62828; background: #fdecea; border-radius: 6px; padding: 10px 16px; font-size: 13px; }
+    .alert-success { color: var(--g); font-weight: 700; font-size: 13px; }
+
+    /* ── PAGE SECTIONS ── */
+    .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+
+    /* ── REPORT LIST ── */
+    .report-item {
+      background: var(--white); border-radius: 10px;
+      padding: 16px 22px; margin-bottom: 12px;
+      display: flex; justify-content: space-between; align-items: center;
+      box-shadow: var(--shadow-sm); flex-wrap: wrap; gap: 10px;
+    }
+    .report-item-title { font-weight: 800; color: #1a1a1a; font-size: 14px; }
+    .report-item-meta { font-size: 12px; color: #888; margin-top: 3px; }
+    .report-item-meta strong { color: var(--g); letter-spacing: 1px; }
+    .report-item-actions { display: flex; gap: 8px; }
+
+    /* ── RESULT ROWS ── */
+    .result-row { display: flex; gap: 10px; margin-bottom: 8px; align-items: center; }
+
+    /* ── MISC UTIL ── */
+    .overflow-x { overflow-x: auto; }
+    .inline-block { display: inline-block; }
+    .actions-row { display: flex; gap: 12px; align-items: center; }
+    .empty-state { background: var(--white); border-radius: 10px; padding: 40px; text-align: center; color: #aaa; }
+    .form-group { margin-bottom: 16px; }
+    .row-between { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+
+    /* ── QR overrides: remove border qrcode.js adds ── */
+    #qr-verify-report-container img,
+    #qr-preview-report-container img,
+    .qr-wrap img { border: none !important; }
+    .qr-wrap table { margin: 0 !important; }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════ NAV ══════════════ -->
+<nav class="nav">
+  <div class="nav-brand">
+    <svg width="22" height="16" viewBox="0 0 50 36">
+      <rect x="2"  y="22" width="7" height="13" fill="#4caf50" rx="1"/>
+      <rect x="12" y="14" width="7" height="21" fill="#4caf50" rx="1"/>
+      <rect x="22" y="8"  width="7" height="27" fill="#4caf50" rx="1"/>
+      <rect x="32" y="16" width="7" height="19" fill="#4caf50" rx="1"/>
+      <rect x="42" y="4"  width="7" height="31" fill="#4caf50" rx="1"/>
+    </svg>
+    <span class="nav-brand-name">DRPEPTIDE</span>
+  </div>
+  <div class="nav-tabs">
+    <button class="btn-sec active" id="nav-verify" onclick="navigate('verify')">🔍 Verify</button>
+    <button class="btn-sec"        id="nav-admin"  onclick="navigate('admin')">⚙️ Admin</button>
+  </div>
+</nav>
+
+<!-- ══════════════ MAIN ══════════════ -->
+<div class="container">
+
+  <!-- ── VIEW: VERIFY ── -->
+  <div class="view active" id="view-verify">
+
+    <!-- Form -->
+    <div class="card" id="verify-form-card">
+      <h2 style="color:var(--g);font-weight:900;font-size:22px;margin-bottom:8px;">Verify Test Report</h2>
+      <p style="color:#666;font-size:14px;margin-bottom:28px;">
+        Enter the unique verification key printed at the bottom of your report.
+      </p>
+      <div style="display:flex;gap:10px;">
+        <input
+          class="input"
+          id="verify-key-input"
+          style="font-size:17px;letter-spacing:3px;text-transform:uppercase;flex:1;"
+          placeholder="e.g. 8VNWREBM4NLI"
+          oninput="this.value=this.value.toUpperCase()"
+          onkeydown="if(event.key==='Enter')handleVerify()"
+        />
+        <button class="btn" onclick="handleVerify()">Verify</button>
+      </div>
+      <div id="verify-error" class="alert-error" style="display:none;"></div>
+    </div>
+
+    <!-- Result -->
+    <div id="verify-result" style="display:none;">
+      <div class="row-between" style="margin-bottom:20px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:22px;">✅</span>
+          <span style="color:var(--g);font-weight:800;font-size:16px;">Report verified successfully</span>
+        </div>
+        <div style="display:flex;gap:10px;">
+          <button class="btn-sec" onclick="clearVerify()">← Back</button>
+          <button class="btn" id="verify-dl-btn" onclick="handleVerifyDownload()">⬇ Download JPG</button>
+        </div>
+      </div>
+      <div class="overflow-x">
+        <div class="inline-block" id="verify-report-container"></div>
+      </div>
+    </div>
+
+  </div><!-- /view-verify -->
+
+
+  <!-- ── VIEW: ADMIN ── -->
+  <div class="view" id="view-admin">
+
+    <!-- Auth Gate -->
+    <div id="admin-auth" style="max-width:420px;margin:0 auto;">
+      <div class="card">
+        <h2 style="font-weight:900;margin-bottom:20px;">Admin Access</h2>
+        <div class="form-group">
+          <label class="lbl" for="admin-pass-input">Password</label>
+          <input type="password" class="input" id="admin-pass-input"
+            placeholder="Enter admin password"
+            onkeydown="if(event.key==='Enter')handleAdminLogin()" />
+        </div>
+        <button class="btn" onclick="handleAdminLogin()">Login</button>
+      </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="admin-dashboard" style="display:none;">
+      <div class="section-header">
+        <h2 style="font-weight:900;color:#1a1a1a;" id="dashboard-title">All Reports (0)</h2>
+        <button class="btn" onclick="startCreate()">+ New Report</button>
+      </div>
+      <div id="reports-list"></div>
+    </div>
+
+    <!-- Create / Edit -->
+    <div id="admin-create" style="display:none;">
+      <div class="card">
+        <div class="section-header" style="margin-bottom:28px;">
+          <h2 style="margin:0;font-weight:900;color:#1a1a1a;" id="form-title">New Report</h2>
+          <button class="btn-sec" onclick="showDashboard()">← Back</button>
+        </div>
+
+        <fieldset>
+          <legend>LAB INFORMATION</legend>
+          <div class="grid-3">
+            <div><label class="lbl">Lab Name</label><input class="input" id="f-labName" /></div>
+            <div><label class="lbl">Lab Email</label><input class="input" id="f-labEmail" /></div>
+            <div><label class="lbl">Lab Website</label><input class="input" id="f-labWeb" /></div>
+          </div>
+        </fieldset>
+
+        <div class="grid-3" style="margin-bottom:20px;">
+          <div><label class="lbl">Testing Ordered</label><input type="date" class="input" id="f-testingOrdered" /></div>
+          <div><label class="lbl">Sample Received</label><input type="date" class="input" id="f-sampleReceived" /></div>
+          <div><label class="lbl">Analysis Date</label><input type="date" class="input" id="f-analysisDate" /></div>
+        </div>
+
+        <div class="grid-3" style="margin-bottom:20px;">
+          <div><label class="lbl">Client Name</label><input class="input" id="f-client" /></div>
+          <div><label class="lbl">Sample ID</label><input class="input" id="f-sample" /></div>
+          <div><label class="lbl">Manufacturer</label><input class="input" id="f-manufacturer" /></div>
+          <div><label class="lbl">Batch</label><input class="input" id="f-batch" /></div>
+        </div>
+
+        <div class="form-group">
+          <label class="lbl">Sample Description</label>
+          <textarea class="input" id="f-sampleDescription"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="lbl">Tests Requested</label>
+          <textarea class="input" id="f-testsRequested"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="lbl">Comments</label>
+          <textarea class="input" id="f-comments"></textarea>
+        </div>
+
+        <fieldset>
+          <legend>SIGNATURE IMAGE (optional)</legend>
+          <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+            <div>
+              <label class="lbl">Upload PNG / JPG</label>
+              <input type="file" id="f-sig-upload" accept="image/*"
+                onchange="handleSigUpload(event)" style="font-size:13px;font-family:var(--font);" />
+            </div>
+            <img id="f-sig-preview"
+              style="height:58px;display:none;border:1px solid #eee;padding:4px;border-radius:4px;background:#fff;" />
+            <button class="btn-sec btn-sm" id="f-sig-clear"
+              style="display:none;" onclick="clearSig()">Remove</button>
+          </div>
+        </fieldset>
+
+        <!-- Results -->
+        <div style="margin-bottom:26px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <label class="lbl" style="margin:0;font-size:13px;">Results</label>
+            <button class="btn-sec btn-sm" onclick="addResultRow()">+ Add Row</button>
+          </div>
+          <div id="results-rows"></div>
+        </div>
+
+        <div class="actions-row">
+          <button class="btn" style="padding:12px 36px;font-size:15px;" id="save-btn" onclick="handleSave()">
+            Generate Report
+          </button>
+          <span class="alert-success" id="save-msg" style="display:none;"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Preview -->
+    <div id="admin-preview" style="display:none;">
+      <div class="row-between" style="margin-bottom:20px;">
+        <div>
+          <div style="font-weight:900;font-size:16px;color:#1a1a1a;" id="preview-task-label"></div>
+          <div style="font-size:12px;color:#888;margin-top:3px;">
+            Key:&nbsp;<strong style="color:var(--g);letter-spacing:2px;" id="preview-key-label"></strong>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;">
+          <button class="btn-sec" onclick="showDashboard()">← Admin</button>
+          <button class="btn-sec" onclick="startEditFromPreview()">Edit</button>
+          <button class="btn" id="preview-dl-btn" onclick="handlePreviewDownload()">⬇ Download JPG</button>
+        </div>
+      </div>
+      <div class="overflow-x">
+        <div class="inline-block" id="preview-report-container"></div>
+      </div>
+    </div>
+
+  </div><!-- /view-admin -->
+
+</div><!-- /container -->
+
+
+<!-- ══════════════ SCRIPT ══════════════ -->
+<script src="backend.js"></script>
+</body>
+</html>
