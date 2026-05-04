@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DrPeptide — Admin Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --g: #4caf50;
+      --g-light: #e8f5e9;
+      --g-border: #c8e6c9;
+      --font: 'Jost', 'Trebuchet MS', sans-serif;
+      --bg: #f2f4f2;
+      --white: #fff;
+      --shadow: 0 4px 20px rgba(0,0,0,0.08);
+      --shadow-sm: 0 2px 8px rgba(0,0,0,0.05);
+      --text: #222;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    /* ── NAV ── */
+    .nav {
+      background: var(--white); border-bottom: 2px solid var(--g);
+      padding: 0 28px; display: flex; align-items: center; justify-content: space-between;
+      height: 60px; position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 1px 8px rgba(0,0,0,0.07);
+    }
+    .nav-brand { display: flex; align-items: center; gap: 10px; }
+    .nav-brand-name { font-weight: 900; font-size: 16px; color: #1a1a1a; letter-spacing: 3px; }
+    .badge { background: var(--g-light); color: var(--g); padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+
+    /* ── LAYOUT ── */
+    .container { max-width: 960px; margin: 0 auto; padding: 40px 20px; }
+    .card { background: var(--white); border-radius: 12px; padding: 40px; box-shadow: var(--shadow); }
+    .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 20px;}
+    
+    /* ── DASHBOARD LIST ── */
+    .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; border-bottom: 2px solid #eee; padding-bottom: 16px; }
+    .report-item {
+      background: var(--white); border-radius: 10px; padding: 20px 24px; margin-bottom: 16px;
+      display: flex; justify-content: space-between; align-items: center;
+      box-shadow: var(--shadow-sm); flex-wrap: wrap; gap: 16px; border: 1px solid #eaeaea;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .report-item:hover { transform: translateY(-2px); box-shadow: var(--shadow); border-color: var(--g-border); }
+    .report-title { font-weight: 800; color: #1a1a1a; font-size: 16px; margin-bottom: 4px; }
+    .report-meta { font-size: 13px; color: #666; }
+    .report-meta strong { color: var(--g); letter-spacing: 1px; }
+    .report-actions { display: flex; gap: 10px; }
+    .empty-state { text-align: center; padding: 60px 20px; color: #888; background: #fff; border-radius: 12px; border: 1px dashed #ccc; }
+
+    /* ── FORMS (Edit) ── */
+    .lbl { font-size: 13px; font-weight: 700; color: #555; margin-bottom: 6px; display: block; }
+    .input {
+      border: 1px solid #ddd; border-radius: 6px; padding: 10px 14px; 
+      font-size: 14px; width: 100%; outline: none; font-family: var(--font);
+      transition: all 0.2s; background: #fafafa;
+    }
+    .input:focus { border-color: var(--g); background: #fff; box-shadow: 0 0 0 3px var(--g-light); }
+    textarea.input { height: 80px; resize: vertical; }
+    fieldset { border: 1px solid var(--g-border); border-radius: 8px; padding: 20px; margin-bottom: 24px; background: #fff; }
+    legend { background: var(--g-light); color: var(--g); font-weight: 800; font-size: 12px; padding: 4px 12px; border-radius: 4px; letter-spacing: 1px; }
+
+    /* ── BUTTONS ── */
+    .btn { background: var(--g); color: #fff; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 700; font-size: 14px; cursor: pointer; transition: all 0.2s; }
+    .btn:hover { background: #43a047; transform: translateY(-1px); }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .btn-sec { background: #f0f0f0; color: #333; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer; transition: background 0.2s; }
+    .btn-sec:hover { background: #e0e0e0; }
+    .btn-danger { background: #fdecea; color: #c62828; border: none; padding: 10px 16px; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer; transition: background 0.15s; }
+    .btn-danger:hover { background: #fbc0bc; }
+
+    /* ── DYNAMIC ROWS ── */
+    .result-row { display: flex; gap: 12px; margin-bottom: 10px; align-items: center; background: #f9f9f9; padding: 8px; border-radius: 6px; border: 1px solid #eee; }
+    .result-row .input { margin-bottom: 0; background: #fff; }
+
+    /* ── VIEWS ── */
+    .view { display: none; animation: fadeIn 0.3s ease-in-out; }
+    .view.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ── ALERTS / LOADING ── */
+    .alert { padding: 12px 16px; border-radius: 6px; margin-bottom: 20px; font-weight: 600; font-size: 14px; display: none; }
+    .alert-error { background: #fdecea; color: #c62828; border: 1px solid #f9a8a8; }
+    .alert-success { background: var(--g-light); color: var(--g); border: 1px solid var(--g-border); }
+    .loader-text { text-align: center; font-weight: 700; color: #666; padding: 40px; }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-brand">
+    <svg width="22" height="16" viewBox="0 0 50 36">
+      <rect x="2"  y="22" width="7" height="13" fill="#4caf50" rx="1"/>
+      <rect x="12" y="14" width="7" height="21" fill="#4caf50" rx="1"/>
+      <rect x="22" y="8"  width="7" height="27" fill="#4caf50" rx="1"/>
+      <rect x="32" y="16" width="7" height="19" fill="#4caf50" rx="1"/>
+      <rect x="42" y="4"  width="7" height="31" fill="#4caf50" rx="1"/>
+    </svg>
+    <span class="nav-brand-name">DRPEPTIDE</span>
+  </div>
+  <span class="badge">Dashboard</span>
+</nav>
+
+<div class="container">
+  <div id="system-msg" class="alert"></div>
+
+  <!-- VIEW: DASHBOARD LIST -->
+  <div class="view active" id="view-dashboard">
+    <div class="section-header">
+      <h2 style="font-weight:900; font-size: 24px;">All Reports <span id="report-count" style="color: #888; font-size: 20px;">(0)</span></h2>
+      <button class="btn" onclick="fetchReports()">🔄 Refresh</button>
+    </div>
+    
+    <div id="reports-list">
+      <div class="loader-text">Loading database...</div>
+    </div>
+  </div>
+
+  <!-- VIEW: EDIT FORM -->
+  <div class="view" id="view-edit">
+    <div class="card">
+      <div class="section-header" style="margin-bottom: 30px;">
+        <div>
+          <h2 style="font-weight:900; margin-bottom: 4px; font-size: 24px;">Edit Report <span id="edit-task-num" style="color:var(--g)"></span></h2>
+          <p style="color:#666; font-size: 13px;">Verification Key: <strong id="edit-unique-key" style="letter-spacing: 1px;"></strong></p>
+        </div>
+        <button class="btn-sec" onclick="showDashboard()">← Cancel & Back</button>
+      </div>
+
+      <fieldset>
+        <legend>LAB INFORMATION</legend>
+        <div class="grid-3">
+          <div><label class="lbl">Lab Name</label><input class="input" id="e-labName" /></div>
+          <div><label class="lbl">Lab Email</label><input class="input" id="e-labEmail" /></div>
+          <div><label class="lbl">Lab Website</label><input class="input" id="e-labWeb" /></div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>REPORT DETAILS</legend>
+        <div class="grid-3">
+          <div><label class="lbl">Testing Ordered</label><input type="date" class="input" id="e-testingOrdered" /></div>
+          <div><label class="lbl">Sample Received</label><input type="date" class="input" id="e-sampleReceived" /></div>
+          <div><label class="lbl">Analysis Date</label><input type="date" class="input" id="e-analysisDate" /></div>
+        </div>
+        <div class="grid-3">
+          <div><label class="lbl">Client Name</label><input class="input" id="e-client" /></div>
+          <div><label class="lbl">Sample ID</label><input class="input" id="e-sample" /></div>
+          <div><label class="lbl">Manufacturer</label><input class="input" id="e-manufacturer" /></div>
+          <div><label class="lbl">Batch Number</label><input class="input" id="e-batch" /></div>
+        </div>
+        <div style="margin-bottom: 16px;">
+          <label class="lbl">Sample Description</label>
+          <textarea class="input" id="e-sampleDescription"></textarea>
+        </div>
+        <div style="margin-bottom: 16px;">
+          <label class="lbl">Tests Requested</label>
+          <textarea class="input" id="e-testsRequested"></textarea>
+        </div>
+        <div style="margin-bottom: 16px;">
+          <label class="lbl">Comments</label>
+          <textarea class="input" id="e-comments"></textarea>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>RESULTS</legend>
+        <div id="edit-results-rows" style="margin-bottom: 16px;"></div>
+        <button class="btn-sec" onclick="addEditResultRow()">+ Add Result Row</button>
+      </fieldset>
+
+      <fieldset>
+        <legend>SIGNATURE</legend>
+        <div style="display:flex;align-items:center;gap:16px;">
+          <input type="file" id="e-sig-upload" accept="image/png, image/jpeg" class="input" style="width: auto; background: transparent; border: none; padding: 0;" />
+          <img id="e-sig-preview" style="height:50px; display:none; border:1px solid #ddd; padding:2px; border-radius:4px; background:#fff;" />
+          <button class="btn-sec" id="e-sig-clear" style="display:none; padding: 6px 12px; font-size: 12px;" onclick="clearEditSig()">Remove</button>
+        </div>
+      </fieldset>
+
+      <div style="display: flex; justify-content: flex-end; border-top: 2px solid #eee; padding-top: 24px;">
+        <button class="btn" id="btn-save" onclick="saveEdit()">💾 Save Changes to Firebase</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════ FIREBASE & LOGIC ══════════════ -->
+<script type="module">
+  // 1. Import Firebase Modular SDKs
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { 
+    getFirestore, collection, doc, getDocs, updateDoc, deleteDoc, query, orderBy 
+  } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+  // 2. YOUR FIREBASE CONFIGURATION
+  // !!! REPLACE THIS OBJECT WITH YOUR ACTUAL FIREBASE CONFIG !!!
+  const firebaseConfig = {
+             apiKey: "AIzaSyDhPTtitT_rX8z0o2uDjRsVwTjAG71mmvk",
+            authDomain: "rehobothbank-landing.firebaseapp.com",
+            projectId: "rehobothbank-landing",
+            storageBucket: "rehobothbank-landing.firebasestorage.app",
+            messagingSenderId: "1086996659612",
+            appId: "1:1086996659612:web:6905bcad01ada368bc1c59"
+  };
+
+  let app, db;
+  try {
+    app = initializeApp(firebaseConfig);
+    db = getFirestore(app);
+  } catch (error) {
+    showMessage("Firebase Initialization Failed. Check config.", "error");
+  }
+
+  // ── Global State ──
+  const State = {
+    allReports: [],
+    editingId: null,
+    editingResults: [],
+    editingSignature: null
+  };
+
+  // ── UI Helpers ──
+  const el = id => document.getElementById(id);
+  const esc = s => String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+
+  function showMessage(msg, type = "success") {
+    const e = el('system-msg');
+    e.textContent = msg;
+    e.className = `alert alert-${type}`;
+    e.style.display = 'block';
+    window.scrollTo(0,0);
+    setTimeout(() => e.style.display = 'none', 4000);
+  }
+
+  // ── Navigation ──
+  window.showDashboard = () => {
+    el('view-edit').classList.remove('active');
+    el('view-dashboard').classList.add('active');
+    State.editingId = null;
+  };
+
+  // ── 1. Fetch & Display Reports ──
+  window.fetchReports = async function() {
+    if (!db) return;
+    el('reports-list').innerHTML = '<div class="loader-text">Loading from Firebase...</div>';
+    
+    try {
+      const q = query(collection(db, "reports"), orderBy("taskNumber", "desc"));
+      const snapshot = await getDocs(q);
+      
+      State.allReports = [];
+      snapshot.forEach(doc => {
+        State.allReports.push({ id: doc.id, ...doc.data() });
+      });
+
+      renderDashboard();
+    } catch (err) {
+      console.error(err);
+      el('reports-list').innerHTML = `<div class="empty-state" style="color:red;">Error loading reports: ${err.message}</div>`;
+    }
+  };
+
+  function renderDashboard() {
+    el('report-count').textContent = `(${State.allReports.length})`;
+    const list = el('reports-list');
+    
+    if (State.allReports.length === 0) {
+      list.innerHTML = '<div class="empty-state">No reports found in the database. Use the Generator to create one.</div>';
+      return;
+    }
+
+    list.innerHTML = State.allReports.map(r => `
+      <div class="report-item">
+        <div>
+          <div class="report-title">#${r.taskNumber} — ${esc(r.sample || "Unnamed Sample")}</div>
+          <div class="report-meta">
+            Client: ${esc(r.client || "N/A")} &nbsp;|&nbsp; 
+            Date: ${r.analysisDate} &nbsp;|&nbsp; 
+            Key: <strong>${esc(r.uniqueKey)}</strong>
+          </div>
+        </div>
+        <div class="report-actions">
+          <button class="btn-sec" onclick="openEdit('${r.uniqueKey}')">✏️ Edit</button>
+          <button class="btn-danger" onclick="deleteReport('${r.uniqueKey}')">🗑 Delete</button>
+        </div>
+      </div>
+    `).join("");
+  }
+
+  // ── 2. Delete Report ──
+  window.deleteReport = async function(id) {
+    if (!confirm(`Are you sure you want to permanently delete report ${id}?`)) return;
+    
+    try {
+      await deleteDoc(doc(db, "reports", id));
+      showMessage("Report deleted successfully.");
+      fetchReports(); // Refresh the list
+    } catch (err) {
+      showMessage("Failed to delete: " + err.message, "error");
+    }
+  };
+
+  // ── 3. Edit Report Setup ──
+  window.openEdit = function(id) {
+    const report = State.allReports.find(r => r.uniqueKey === id);
+    if (!report) return showMessage("Report not found in memory.", "error");
+
+    State.editingId = id;
+    State.editingResults = JSON.parse(JSON.stringify(report.results || []));
+    State.editingSignature = report.signature || null;
+
+    // Populate Headers
+    el('edit-task-num').textContent = "#" + report.taskNumber;
+    el('edit-unique-key').textContent = report.uniqueKey;
+
+    // Populate Inputs
+    const fields = ["labName","labEmail","labWeb","testingOrdered","sampleReceived","analysisDate","client","sample","manufacturer","batch","sampleDescription","testsRequested","comments"];
+    fields.forEach(f => {
+      if(el(`e-${f}`)) el(`e-${f}`).value = report[f] || "";
+    });
+
+    renderEditResults();
+    updateSigUI();
+
+    // Switch View
+    el('view-dashboard').classList.remove('active');
+    el('view-edit').classList.add('active');
+    window.scrollTo(0,0);
+  };
+
+  // ── Form Logic: Results Array ──
+  window.renderEditResults = function() {
+    el("edit-results-rows").innerHTML = State.editingResults.map((r, i) => `
+      <div class="result-row">
+        <input class="input" style="flex:2;" placeholder="Test Label" value="${esc(r.label)}" oninput="State.editingResults[${i}].label=this.value" />
+        <input class="input" style="flex:1;" placeholder="Value" value="${esc(r.value)}" oninput="State.editingResults[${i}].value=this.value" />
+        <button class="btn-danger" onclick="removeEditResult(${i})">✕</button>
+      </div>
+    `).join("");
+  }
+  window.addEditResultRow = function() { State.editingResults.push({label:"", value:""}); renderEditResults(); }
+  window.removeEditResult = function(i) { State.editingResults.splice(i,1); renderEditResults(); }
+
+  // ── Form Logic: Signature ──
+  el("e-sig-upload").addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      State.editingSignature = ev.target.result;
+      updateSigUI();
+    };
+    reader.readAsDataURL(file);
+  });
+
+  window.clearEditSig = function() {
+    State.editingSignature = null;
+    el("e-sig-upload").value = "";
+    updateSigUI();
+  }
+
+  function updateSigUI() {
+    const preview = el("e-sig-preview");
+    const clearBtn = el("e-sig-clear");
+    if (State.editingSignature) {
+      preview.src = State.editingSignature;
+      preview.style.display = "block";
+      clearBtn.style.display = "block";
+    } else {
+      preview.style.display = "none";
+      clearBtn.style.display = "none";
+    }
+  }
+
+  // ── 4. Save Edits to Firestore ──
+  window.saveEdit = async function() {
+    if (!State.editingId) return;
+    
+    const btn = el('btn-save');
+    btn.disabled = true; btn.textContent = "Saving...";
+
+    const updatedData = {
+      labName: el('e-labName').value, labEmail: el('e-labEmail').value, labWeb: el('e-labWeb').value,
+      testingOrdered: el('e-testingOrdered').value, sampleReceived: el('e-sampleReceived').value, analysisDate: el('e-analysisDate').value,
+      client: el('e-client').value, sample: el('e-sample').value, manufacturer: el('e-manufacturer').value, batch: el('e-batch').value,
+      sampleDescription: el('e-sampleDescription').value, testsRequested: el('e-testsRequested').value, comments: el('e-comments').value,
+      results: State.editingResults,
+      signature: State.editingSignature
+      // note: we do NOT update taskNumber or uniqueKey
+    };
+
+    try {
+      await updateDoc(doc(db, "reports", State.editingId), updatedData);
+      showMessage("Report updated successfully!");
+      showDashboard();
+      fetchReports(); // Refresh list to show new data
+    } catch (err) {
+      showMessage("Error updating report: " + err.message, "error");
+    } finally {
+      btn.disabled = false; btn.textContent = "💾 Save Changes to Firebase";
+    }
+  };
+
+  // Run on load
+  document.addEventListener("DOMContentLoaded", fetchReports);
+
+</script>
+
+</body>
+</html>

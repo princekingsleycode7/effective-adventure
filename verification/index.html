@@ -265,7 +265,7 @@ img:is([sizes=auto i],[sizes^="auto," i]){contain-intrinsic-size:3000px 1500px}
         <div class="flex flex-row gap-[10px]">
              
             <button type="submit" class="button button-dark" onclick="handleVerify()">Verify</button>
-                        </div>
+                               </div>
     </form>
 
 
@@ -587,8 +587,119 @@ var wpcf7_recaptcha = {
 };
 //# sourceURL=wpcf7-recaptcha-js-before
 </script>
-<!-- Replace the existing backend.js script tag with this -->
-<script src="../backend.js" defer></script>
+<!-- Replace the existing backend.js script tag with this 
+<script src="../backend.js" defer></script>-->
+<!-- FIREBASE VERIFICATION LOGIC -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    // 1. UPDATE THIS WITH YOUR ACTUAL FIREBASE CONFIG
+    const firebaseConfig = {
+         apiKey: "AIzaSyDhPTtitT_rX8z0o2uDjRsVwTjAG71mmvk",
+            authDomain: "rehobothbank-landing.firebaseapp.com",
+            projectId: "rehobothbank-landing",
+            storageBucket: "rehobothbank-landing.firebasestorage.app",
+            messagingSenderId: "1086996659612",
+            appId: "1:1086996659612:web:6905bcad01ada368bc1c59"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // Grab elements
+    const form = document.getElementById('verification-form');
+    const submitBtn = form.querySelector('button[type="submit"]');
+
+    // Create a container for the success UI right after the form
+    const resultContainer = document.createElement('div');
+    resultContainer.id = 'verification-result-container';
+    resultContainer.style.display = 'none';
+    form.parentNode.insertBefore(resultContainer, form.nextSibling);
+
+    // Handle Form Submission
+    window.handleVerify = async function(event) {
+        if (event) event.preventDefault(); // Stop page reload
+
+        const taskNum = document.getElementById('task_number').value.trim();
+        const uniqueKey = document.getElementById('unique_key').value.trim().toUpperCase();
+
+        if (!taskNum || !uniqueKey) {
+            if(typeof showToast === 'function') showToast("Please enter both Task Number and Unique Key.");
+            return;
+        }
+
+        // Show loading state
+        const originalText = submitBtn.innerText;
+        submitBtn.innerText = "Verifying...";
+        submitBtn.disabled = true;
+
+        try {
+            // Because we saved reports using the uniqueKey as the Document ID in the generator
+            const docRef = doc(db, "reports", uniqueKey);
+            const docSnap = await getDoc(docRef);
+
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                
+                // Double check the task number matches to prevent brute-forcing keys
+                if (String(data.taskNumber) === String(taskNum)) {
+                    
+                    // Hide the form
+                    form.style.display = 'none';
+                    
+                    // Show the Success UI
+                    resultContainer.innerHTML = `
+                        <div class="mt-[30px] p-6 border-2 border-[#09AD9D] rounded-lg bg-[#f0fdfa]">
+                            <h3 style="color: #09AD9D; font-size: 16px; font-weight: bold; margin-bottom: 20px;">
+                                 This test is in our database. You can open the report and check if the data match your report.
+                            </h3>
+                            <div class="flex gap-[15px]">
+                                <button onclick="viewReport('${uniqueKey}')" class="button button-dark" style="background: #09AD9D; color: white; border: none;">
+                                    📄 View Report
+                                </button>
+                                <button onclick="resetVerification()" class="button button-dark" style="background: #1D1D1B; color: white; border: none;">
+                                    ↺ Verify Another
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    resultContainer.style.display = 'block';
+                    if(typeof showToast === 'function') showToast("Report successfully verified!");
+                } else {
+                    if(typeof showToast === 'function') showToast("Error: Task Number does not match the Unique Key.");
+                }
+            } else {
+                if(typeof showToast === 'function') showToast("Invalid Verification Key. Report not found.");
+            }
+        } catch (error) {
+            console.error(error);
+            if(typeof showToast === 'function') showToast("Database Error: " + error.message);
+        } finally {
+            submitBtn.innerText = originalText;
+            submitBtn.disabled = false;
+        }
+    };
+
+    // Override the form submission so hitting "Enter" triggers our script
+    form.addEventListener('submit', window.handleVerify);
+
+    // Logic to reset the form
+    window.resetVerification = function() {
+        document.getElementById('task_number').value = '';
+        document.getElementById('unique_key').value = '';
+        resultContainer.style.display = 'none';
+        form.style.display = 'block';
+    };
+
+    // Logic to open the report in a new tab
+    window.viewReport = function(key) {
+        // Opens a standalone report viewer page, passing the key in the URL
+        window.open('/verification/view-report.html?key=' + key, '_blank');
+    };
+</script>
+<!-- END FIREBASE VERIFICATION LOGIC -->
 <script src="../wp-content/plugins/contact-form-7/modules/recaptcha/indexb5e1.js?ver=6.1.5" id="wpcf7-recaptcha-js"></script>
 </body>
 

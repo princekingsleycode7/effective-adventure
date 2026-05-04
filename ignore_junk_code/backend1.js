@@ -66,6 +66,27 @@ function _logo(sz) {
     '</svg>';
 }
 
+// ── URL Generator for Test Reports ────────────────────────────────────────────
+function DRP_generateReportURL(report) {
+  // Change this to your actual verification subdomain/domain
+  var baseUrl = "https://verify.drpeptide.com/tests"; 
+
+  // Clean strings: remove special characters and replace spaces with underscores
+  var safeSample = (report.sample || "").replace(/[^a-zA-Z0-9]/g, "_");
+  var safeClient = (report.client || "").replace(/[^a-zA-Z0-9]/g, "_");
+  
+  // Combine them and remove any accidental double-underscores
+  var middlePart = (safeSample + "_" + safeClient).replace(/_+/g, "_");
+
+  // Remove trailing underscore if it exists
+  middlePart = middlePart.replace(/_$/, "");
+
+  // Format: {taskNumber}-{Sample}_{Client}_{UniqueKey}
+  var slug = report.taskNumber + "-" + middlePart + "_" + report.uniqueKey;
+  
+  return baseUrl + "/" + slug;
+}
+
 // ── Build report card HTML ────────────────────────────────────────────────────
 var DRP_VERIFY_BASE = "https://drpeptide.com/verify";
 
@@ -207,7 +228,7 @@ function DRP_renderReport(containerEl, report) {
     if (!qrEl) return;
     try {
       new QRCode(qrEl, {
-        text: DRP_VERIFY_BASE + "/" + report.uniqueKey,
+        text: DRP_generateReportURL(report),
         width: 54, height: 54,
         colorDark: "#1a1a1a", colorLight: "#ffffff",
         correctLevel: QRCode.CorrectLevel.M,
