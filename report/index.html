@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Test Report</title>
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&display=swap');
+
+    :root {
+        --main-green: #3cb850; /* Adjusted to match the specific green in the image */
+        --light-gray: #f2f2f2;
+        --text-dark: #000;
+        --text-light: #555;
+        --font-family: 'Open Sans', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+        font-family: var(--font-family);
+        margin: 0;
+        padding: 20px;
+        background-color: #e0e0e0; /* Background to contrast the white page */
+        display: flex;
+        justify-content: center;
+    }
+
+    .page {
+        background-color: white;
+        width: 800px;
+        padding: 40px 50px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        box-sizing: border-box;
+    }
+
+    /* Header */
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+
+    .header-title {
+        color: var(--main-green);
+        font-size: 34px;
+        font-weight: 500;
+        letter-spacing: 0.5px;
+    }
+
+    .header-logo {
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-left: -40px; /* Adjusting center position relative to other elements */
+        
+    }
+
+    .logo-svg {
+        margin-bottom: -2px;
+    }
+
+    .logo-text {
+        font-size: 20px;
+        font-weight: 700;
+        letter-spacing: 1px;
+    }
+    .logo-text .jano { color: #444; }
+    .logo-text .shik { color: var(--main-green); }
+
+    .header-contact {
+        text-align: right;
+        font-size: 13px;
+        color: var(--text-light);
+        line-height: 1.5;
+    }
+
+    .divider {
+        border: none;
+        border-top: 2px solid var(--main-green);
+        margin: 0 0 25px 0;
+    }
+
+    /* Task Info */
+    .task-info {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 30px;
+    }
+
+    .task-left {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .task-right {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .task-row {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+
+    .label {
+        color: var(--main-green);
+        font-size: 18px;
+        font-weight: 500;
+    }
+
+    .label-small {
+        color: var(--main-green);
+        font-size: 16px;
+        font-weight: 500;
+    }
+
+    .value-box {
+        background-color: var(--light-gray);
+        padding: 5px 12px;
+        font-size: 16px;
+        color: var(--text-dark);
+    }
+
+    .task-left .value-box {
+        width: 180px;
+    }
+
+    /* Details Grid */
+    .details-grid {
+        display: grid;
+        grid-template-columns: 140px 1fr;
+        gap: 8px 15px;
+        margin-bottom: 35px;
+    }
+
+    .details-grid .label-small {
+        align-self: center;
+    }
+
+    .details-grid .value-box {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    /* Sections */
+    .section {
+        margin-bottom: 25px;
+    }
+
+    .section-title {
+        color: var(--main-green);
+        font-size: 16px;
+        font-weight: 300;
+        margin-bottom: 8px;
+    }
+
+    .section-content {
+        background-color: var(--light-gray);
+        padding: 15px;
+        font-size: 14px;
+        color: var(--text-dark);
+        min-height: 20px;
+    }
+
+    .comments-content {
+        min-height: 40px;
+    }
+
+    /* Results Table */
+    .results-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        margin-bottom: 5px;
+        position: relative;
+    }
+
+    .qr-code {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        bottom: 0;
+        width: 45px;
+        height: 45px;
+    }
+
+    .results-table {
+        width: 100%;
+        border-collapse: collapse;
+        border: 1px solid var(--main-green);
+    }
+
+    .results-table td {
+        border: 1px solid var(--main-green);
+        padding: 8px 12px;
+        font-size: 14px;
+        color: var(--text-dark);
+        height: 20px;
+    }
+
+    .results-table td:first-child {
+        width: 50%;
+    }
+
+    /* Footer */
+    .footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 50px;
+        margin-bottom: 50px;
+    }
+
+    .footer-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .footer-right {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .signature-svg {
+        margin-left: 10px;
+        margin-top: -20px; /* Adjusting to overlap slightly like a real signature */
+    }
+
+    /* Verification */
+    .verification {
+        text-align: center;
+    }
+
+    .verify-text {
+        color: var(--main-green);
+        font-size: 16px;
+        font-weight: 500;
+        margin-bottom: 15px;
+        text-align: justify;
+        letter-spacing: 1px;
+        
+    }
+
+    .verify-key {
+        background-color: var(--light-gray);
+        padding: 10px;
+        font-size: 14px;
+        color: var(--text-dark);
+        letter-spacing: 1px;
+    }
+
+</style>
+</head>
+<body>
+
+<div class="page">
+    <!-- Header -->
+    <div class="header">
+        <div class="header-title">TEST REPORT</div>
+        <div class="header-logo">
+            <img src="logo.JPG" alt="logo" height="60px" width="100px" style="margin-bottom: 15px;"/>
+            
+        </div>
+        <div class="header-contact">
+            E-mail: info@janoshik.com<br>
+            Web: www.janoshik.com
+        </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- Task Info -->
+    <div class="task-info">
+        <div class="task-left">
+            <div class="label">Task Number</div>
+            <div class="value-box">#123809</div>
+        </div>
+        <div class="task-right">
+            <div class="task-row">
+                <div class="label-small">Testing ordered ></div>
+                <div class="value-box">23 MAR '26</div>
+            </div>
+            <div class="task-row">
+                <div class="label-small">Sample received ></div>
+                <div class="value-box">14 APR '26</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Details Grid -->
+    <div class="details-grid">
+        <div class="label-small">Client</div>
+        <div class="value-box">SSR</div>
+
+        <div class="label-small">Sample</div>
+        <div class="value-box">Tirzepatide 30MG | Wholesale | Global supply</div>
+
+        <div class="label-small">Manufacturer</div>
+        <div class="value-box">www.ssrbio.com</div>
+
+        <div class="label-small">Batch</div>
+        <div class="value-box">2026</div>
+    </div>
+
+    <!-- Sample Description -->
+    <div class="section">
+        <div class="section-title">Sample description ></div>
+        <div class="section-content">
+            See picture or pictures attached.
+        </div>
+    </div>
+
+    <!-- Tests Requested -->
+    <div class="section">
+        <div class="section-title">Tests requested ></div>
+        <div class="section-content">
+            Common GLP-1 peptide blind test (Semaglutide, Tirzepatide and Retatrutide)
+        </div>
+    </div>
+
+    <!-- Results -->
+    <div class="section">
+        <div class="results-header">
+            <div class="section-title" style="margin-bottom: 0;">Results ></div>
+            <!-- Base64 placeholder for the QR code to ensure it renders without external dependencies -->
+            <img class="qr-code" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyAQMAAAAk8RryAAAABlBMVEX///8AAABVwtN+AAAAAXRSTlMAQObYZgAAAAlwSFlzAAAOxAAADsQBlSsOGwAAAGdJREFUGJVjYCAPcDAwMHAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMAAAN4AAQEAw68AAAAASUVORK5CYII=" alt="QR Code">
+        </div>
+        <table class="results-table">
+            <tr>
+                <td>Tirzepatide</td>
+                <td>33.67 mg</td>
+            </tr>
+            <tr>
+                <td>Purity</td>
+                <td>99.889%</td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Comments -->
+    <div class="section">
+        <div class="section-title">Comments ></div>
+        <div class="section-content comments-content">
+            <!-- Empty as per image -->
+        </div>
+    </div>
+
+    <!-- Footer (Signatures) -->
+    <div class="footer">
+        <div class="footer-left">
+            <div class="label-small">Analysis conducted ></div>
+            <div class="value-box">15 APR 2026</div>
+        </div>
+        <div class="footer-right">
+            <div class="label-small">Signature ></div>
+            <svg class="signature-svg" width="80" height="80" viewBox="0 0 80 80">
+                <!-- Mimicking the signature from the image -->
+                <path d="M40,75 Q42,10 45,60 Q48,45 52,55 Q55,48 60,52 Q65,48 70,50" fill="none" stroke="#666" stroke-width="1" stroke-linecap="round"/>
+                <path d="M42,80 L50,5" fill="none" stroke="#666" stroke-width="1"/>
+                <path d="M55,50 L65,45" fill="none" stroke="#666" stroke-width="1"/>
+            </svg>
+        </div>
+    </div>
+
+    <!-- Verification -->
+    <div class="verification">
+        <div class="verify-text">Verify this test at www.janoshik.com/verify/ with the following unique key</div>
+        <div class="verify-key">IK3RE3TKXJ3P</div>
+    </div>
+
+</div>
+
+</body>
+</html>

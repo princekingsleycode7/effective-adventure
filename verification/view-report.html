@@ -1,176 +1,266 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>View Report — DrPeptide</title>
-  <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <style>
-    :root {
-      --g: #4caf50;
-      --font: 'Jost', 'Trebuchet MS', sans-serif;
-      --bg: #f2f4f2;
-    }
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>View Report — DrPeptide</title>
+    <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --g: #4caf50;
+            --font: 'Jost', 'Trebuchet MS', sans-serif;
+            --bg: #f2f4f2;
+        }
 
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: var(--font); background: var(--bg); color: #222; min-height: 100vh; display: flex; flex-direction: column; align-items: center;  }
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
-    /* ── ACTION BAR ── */
-    .action-bar {
-      width: 100%; display: flex; justify-content: space-between; align-items: center;
-      background: #000000; padding: 16px 24px; 
-      margin-bottom: 24px;
-    }
-    .btn {
-      background: var(--g); color: #fff; border: none; padding: 10px 20px; border-radius: 6px;
-      font-weight: 700; font-size: 14px; cursor: pointer; transition: all 0.2s;
-    }
-    .btn:hover { background: #43a047; transform: translateY(-1px); }
-    .btn-sec {
-      background: #f0f0f0; color: #333; border: none; padding: 10px 20px; border-radius: 6px;
-      font-weight: 600; font-size: 14px; cursor: pointer; transition: background 0.2s;
-    }
-    .btn-sec:hover { background: #e0e0e0; }
+        body {
+            font-family: var(--font);
+            background: var(--bg);
+            color: #222;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
 
-    /* ── REPORT CONTAINER ── */
-    .report-wrapper {
-      box-shadow:none;
-      background: #fff;
-      overflow: hidden;
-    }
+        /* ── ACTION BAR ── */
+        .action-bar {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #000000;
+            padding: 16px 24px;
+            margin-bottom: 24px;
+        }
 
-    /* ── SYSTEM MESSAGES ── */
-    #loading, #error { text-align: center; padding: 60px 20px; background: #fff; border-radius: 8px; width: 100%; max-width: 794px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-    #error { color: #c62828; display: none; }
-    .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--g); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 16px; }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .btn {
+            background: var(--g);
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
 
-    /* ── PRINT STYLES ── */
-    @media print {
-      body { background: #fff; padding: 0; }
-      .action-bar { display: none !important; }
-      .report-wrapper { box-shadow: none; }
-      @page { margin: 0; }
-    }
-    
-    /* Fix QR Code border issue */
-    #qr-container img { border: none !important; }
+        .btn:hover {
+            background: #43a047;
+            transform: translateY(-1px);
+        }
 
-    .btn92{
-    
-        color: rgb(160, 160, 160);
-        border: none;
-        outline: none;
-        background-color: transparent;
-    }
-  </style>
+        .btn-sec {
+            background: #f0f0f0;
+            color: #333;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-sec:hover {
+            background: #e0e0e0;
+        }
+
+        /* ── REPORT CONTAINER ── */
+        .report-wrapper {
+            box-shadow: none;
+            background: #fff;
+            overflow: hidden;
+        }
+
+        /* ── SYSTEM MESSAGES ── */
+        #loading,
+        #error {
+            text-align: center;
+            padding: 60px 20px;
+            background: #fff;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 794px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        #error {
+            color: #c62828;
+            display: none;
+        }
+
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--g);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ── PRINT STYLES ── */
+        @media print {
+            body {
+                background: #fff;
+                padding: 0;
+            }
+
+            .action-bar {
+                display: none !important;
+            }
+
+            .report-wrapper {
+                box-shadow: none;
+            }
+
+            @page {
+                margin: 0;
+            }
+        }
+
+        /* Fix QR Code border issue */
+        #qr-container img {
+            border: none !important;
+        }
+
+        .btn92 {
+
+            color: rgb(160, 160, 160);
+            border: none;
+            outline: none;
+            background-color: transparent;
+        }
+    </style>
 </head>
+
 <body>
 
-  <!-- Loading State -->
-  <div id="loading">
-    <div class="loader"></div>
-    <h2 style="font-weight: 700; color: #555;">Fetching Report...</h2>
-  </div>
-
-  <!-- Error State -->
-  <div id="error">
-    <h2 style="font-weight: 900; font-size: 24px; margin-bottom: 10px;">Report Not Found</h2>
-    <p>The verification key provided is invalid or the report has been removed.</p>
-  </div>
-
-  <!-- Action Bar -->
-  <div class="action-bar" id="action-bar" style="display: none;">
-    <div style="font-weight: 800; color: #c4c4c4; font-size: 16px;">Janoshik Analytical</div>
-    <div style="display: flex; gap: 10px;">
-      <button class="btn92">Home</button>
-      <button class="btn92">Public</button>
+    <!-- Loading State -->
+    <div id="loading">
+        <div class="loader"></div>
+        <h2 style="font-weight: 700; color: #555;">Fetching Report...</h2>
     </div>
-  </div>
 
-  <!-- Report Container -->
-  <div class="report-wrapper" id="report-container" style="display: none;" onclick="downloadReport()"></div>
+    <!-- Error State -->
+    <div id="error">
+        <h2 style="font-weight: 900; font-size: 24px; margin-bottom: 10px;">Report Not Found</h2>
+        <p>The verification key provided is invalid or the report has been removed.</p>
+    </div>
 
-  <!-- ══════════════ FIREBASE & LOGIC ══════════════ -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    <!-- Action Bar -->
+    <div class="action-bar" id="action-bar" style="display: none;">
+        <div style="font-weight: 800; color: #c4c4c4; font-size: 16px;">Janoshik Analytical</div>
+        <div style="display: flex; gap: 10px;">
+            <button class="btn92">Home</button>
+            <button class="btn92">Public</button>
+        </div>
+    </div>
 
-    // 1. YOUR FIREBASE CONFIGURATION
-    // !!! REPLACE THIS OBJECT WITH YOUR ACTUAL FIREBASE CONFIG !!!
-    const firebaseConfig = {
-         apiKey: "AIzaSyDhPTtitT_rX8z0o2uDjRsVwTjAG71mmvk",
+    <!-- Report Container -->
+    <div class="report-wrapper" id="report-container" style="display: none;" onclick="downloadReport()"></div>
+
+    <!-- ══════════════ FIREBASE & LOGIC ══════════════ -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // 1. YOUR FIREBASE CONFIGURATION
+        // !!! REPLACE THIS OBJECT WITH YOUR ACTUAL FIREBASE CONFIG !!!
+        const firebaseConfig = {
+            apiKey: "AIzaSyDhPTtitT_rX8z0o2uDjRsVwTjAG71mmvk",
             authDomain: "rehobothbank-landing.firebaseapp.com",
             projectId: "rehobothbank-landing",
             storageBucket: "rehobothbank-landing.firebasestorage.app",
             messagingSenderId: "1086996659612",
             appId: "1:1086996659612:web:6905bcad01ada368bc1c59"
-    };
+        };
 
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
 
-    let currentReport = null;
+        let currentReport = null;
 
-    // ── Helpers ──
-    const el = id => document.getElementById(id);
-    const esc = s => String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
-    const today = () => new Date().toISOString().slice(0,10);
-    const fmtShort = iso => { const d = new Date((iso||today())+"T12:00:00"); const M = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"]; return `${String(d.getDate()).padStart(2,"0")} ${M[d.getMonth()]} '${String(d.getFullYear()).slice(2)}`; }
-    const fmtLong = iso => { const d = new Date((iso||today())+"T12:00:00"); const M = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"]; return `${String(d.getDate()).padStart(2,"0")} ${M[d.getMonth()]} ${d.getFullYear()}`; }
-    const logoSVG = `<svg width="44" height="32" viewBox="0 0 50 36" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="22" width="7" height="13" fill="#4caf50" rx="1"/><rect x="12" y="14" width="7" height="21" fill="#4caf50" rx="1"/><rect x="22" y="8" width="7" height="27" fill="#4caf50" rx="1"/><rect x="32" y="16" width="7" height="19" fill="#4caf50" rx="1"/><rect x="42" y="4" width="7" height="31" fill="#4caf50" rx="1"/></svg>`;
+        // ── Helpers ──
+        const el = id => document.getElementById(id);
+        const esc = s => String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+        const today = () => new Date().toISOString().slice(0, 10);
+        const fmtShort = iso => { const d = new Date((iso || today()) + "T12:00:00"); const M = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]; return `${String(d.getDate()).padStart(2, "0")} ${M[d.getMonth()]} '${String(d.getFullYear()).slice(2)}`; }
+        const fmtLong = iso => { const d = new Date((iso || today()) + "T12:00:00"); const M = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]; return `${String(d.getDate()).padStart(2, "0")} ${M[d.getMonth()]} ${d.getFullYear()}`; }
+        const logoSVG = `<svg width="44" height="32" viewBox="0 0 50 36" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="22" width="7" height="13" fill="#4caf50" rx="1"/><rect x="12" y="14" width="7" height="21" fill="#4caf50" rx="1"/><rect x="22" y="8" width="7" height="27" fill="#4caf50" rx="1"/><rect x="32" y="16" width="7" height="19" fill="#4caf50" rx="1"/><rect x="42" y="4" width="7" height="31" fill="#4caf50" rx="1"/></svg>`;
 
-    // ── Fetch Report Logic ──
-    async function fetchReport() {
-      // Get the ?key= parameter from the URL
-      const urlParams = new URLSearchParams(window.location.search);
-      const key = urlParams.get('key');
+        // ── Fetch Report Logic ──
+        async function fetchReport() {
+            // Get the ?key= parameter from the URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const key = urlParams.get('key');
 
-      if (!key) {
-        showError();
-        return;
-      }
+            if (!key) {
+                showError();
+                return;
+            }
 
-      try {
-        const docRef = doc(db, "reports", key.toUpperCase());
-        const docSnap = await getDoc(docRef);
+            try {
+                const docRef = doc(db, "reports", key.toUpperCase());
+                const docSnap = await getDoc(docRef);
 
-        if (docSnap.exists()) {
-          currentReport = docSnap.data();
-          renderVisualReport(currentReport);
-          
-          el('loading').style.display = 'none';
-          el('action-bar').style.display = 'flex';
-          el('report-container').style.display = 'block';
-        } else {
-          showError();
+                if (docSnap.exists()) {
+                    currentReport = docSnap.data();
+                    renderVisualReport(currentReport);
+
+                    el('loading').style.display = 'none';
+                    el('action-bar').style.display = 'flex';
+                    el('report-container').style.display = 'block';
+                } else {
+                    showError();
+                }
+            } catch (err) {
+                console.error(err);
+                showError();
+            }
         }
-      } catch (err) {
-        console.error(err);
-        showError();
-      }
-    }
 
-    function showError() {
-      el('loading').style.display = 'none';
-      el('error').style.display = 'block';
-    }
+        function showError() {
+            el('loading').style.display = 'none';
+            el('error').style.display = 'block';
+        }
 
-    // ── Render HTML Template ──
-    function renderVisualReport(r) {
-      const sigHTML = r.signature 
-        ? `<img src="${r.signature}" alt="Signature" style="height:72px;width:auto;object-fit:contain;display:block;" />` 
-        : `<span style="font-size:13px;color:#bbb;font-style:italic;">—</span>`;
+        // ── Render HTML Template ──
+        function renderVisualReport(r) {
+            const sigHTML = r.signature
+                ? `<img src="${r.signature}" alt="Signature" style="height:72px;width:auto;object-fit:contain;display:block;" />`
+                : `<span style="font-size:13px;color:#bbb;font-style:italic;">—</span>`;
 
-      const clientRows = [ ["Client", r.client], ["Sample", r.sample], ["Manufacturer", r.manufacturer], ["Batch", r.batch] ]
-        .map(([lbl,val],i) => `<tr style="background:${i%2===0?"#f9f9f9":"#fff"};"><td style="color:#4caf50;font-weight:500;padding:8px 16px;width:140px;">${lbl}</td><td style="padding:8px 16px;color:#222;font-weight:400;">${esc(val)}</td></tr>`).join("");
+            const clientRows = [["Client", r.client], ["Sample", r.sample], ["Manufacturer", r.manufacturer], ["Batch", r.batch]]
+                .map(([lbl, val], i) => `<tr style="background:${i % 2 === 0 ? "#f9f9f9" : "#fff"};"><td style="color:#4caf50;font-weight:500;padding:8px 16px;width:140px;">${lbl}</td><td style="padding:8px 16px;color:#222;font-weight:400;">${esc(val)}</td></tr>`).join("");
 
-      const resRows = (r.results||[]).map(res => `<tr style="border-bottom:1px solid #d4efd4;"><td style="padding:9px 16px;color:#222;width:58%;font-weight:400;">${esc(res.label)}</td><td style="padding:9px 16px;color:#222;font-weight:400;">${esc(res.value)}</td></tr>`).join("");
+            const resRows = (r.results || []).map(res => `<tr style="border-bottom:1px solid #d4efd4;"><td style="padding:9px 16px;color:#222;width:58%;font-weight:400;">${esc(res.label)}</td><td style="padding:9px 16px;color:#222;font-weight:400;">${esc(res.value)}</td></tr>`).join("");
 
-      const html = `
+            const html = `
       <div id="report-inner-wrapper" style="font-family:'Jost','Trebuchet MS',sans-serif;width:794px;background:#fff;padding:52px 64px 44px;box-sizing:border-box;color:#222;line-height:1.5;">
         <!-- HEADER -->
         <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:16px;margin-bottom:24px;border-bottom:2.5px solid #4caf50;">
@@ -223,40 +313,41 @@
         </div>
       </div>`;
 
-      el('report-container').innerHTML = html;
-      
-      // Generate QR
-      if (typeof QRCode !== "undefined") {
-        new QRCode(el("qr-container"), {
-          text: `https://${r.labWeb}/verify/${r.uniqueKey}`,
-          width: 54, height: 54, colorDark: "#1a1a1a", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.M,
-        });
-      }
-    }
+            el('report-container').innerHTML = html;
 
-    // ── Download JPG Logic ──
-    window.downloadReport = async function() {
-      if (!currentReport) return;
-      const btn = el('btn-download');
-      btn.disabled = true; btn.textContent = "Processing...";
-      
-      try {
-        const canvas = await html2canvas(el('report-inner-wrapper'), {
-          scale: 2, useCORS: true, allowTaint: true, backgroundColor: "#ffffff", logging: false
-        });
-        const link = document.createElement("a");
-        link.download = `Report_${currentReport.taskNumber}_${currentReport.uniqueKey}.jpg`;
-        link.href = canvas.toDataURL("image/jpeg", 0.95);
-        link.click();
-      } catch (e) {
-        alert("Download failed. Ensure images (signatures) are CORS compliant.");
-      }
-      
-      btn.disabled = false; btn.textContent = "⬇ Download JPG";
-    }
+            // Generate QR
+            if (typeof QRCode !== "undefined") {
+                new QRCode(el("qr-container"), {
+                    text: `https://${r.labWeb}/verify/${r.uniqueKey}`,
+                    width: 54, height: 54, colorDark: "#1a1a1a", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.M,
+                });
+            }
+        }
 
-    // Start fetching on page load
-    document.addEventListener("DOMContentLoaded", fetchReport);
-  </script>
+        // ── Download JPG Logic ──
+        window.downloadReport = async function () {
+            if (!currentReport) return;
+            const btn = el('btn-download');
+            btn.disabled = true; btn.textContent = "Processing...";
+
+            try {
+                const canvas = await html2canvas(el('report-inner-wrapper'), {
+                    scale: 2, useCORS: true, allowTaint: true, backgroundColor: "#ffffff", logging: false
+                });
+                const link = document.createElement("a");
+                link.download = `Report_${currentReport.taskNumber}_${currentReport.uniqueKey}.jpg`;
+                link.href = canvas.toDataURL("image/jpeg", 0.95);
+                link.click();
+            } catch (e) {
+                alert("Download failed. Ensure images (signatures) are CORS compliant.");
+            }
+
+            btn.disabled = false; btn.textContent = "⬇ Download JPG";
+        }
+
+        // Start fetching on page load
+        document.addEventListener("DOMContentLoaded", fetchReport);
+    </script>
 </body>
+
 </html>
