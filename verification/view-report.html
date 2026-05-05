@@ -3,17 +3,22 @@
 
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>View Report — DrPeptide</title>
-    <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700;800;900&display=swap"
-        rel="stylesheet" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&display=swap');
+
         :root {
             --g: #4caf50;
             --font: 'Jost', 'Trebuchet MS', sans-serif;
             --bg: #f2f4f2;
+            
+            /* Report Variables */
+            --main-green: #3cb850;
+            --light-gray: #f2f2f2;
+            --text-dark: #000;
+            --text-light: #555;
         }
 
         *,
@@ -32,6 +37,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            overflow-x: hidden; /* Prevents horizontal scroll on mobile */
         }
 
         /* ── ACTION BAR ── */
@@ -45,44 +51,43 @@
             margin-bottom: 24px;
         }
 
-        .btn {
-            background: var(--g);
-            color: #fff;
+        .action-bar-title {
+            font-weight: 800; 
+            color: #c4c4c4; 
+            font-size: 16px;
+        }
+
+        .btn92 {
+            color: rgb(160, 160, 160);
             border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
-            font-weight: 700;
+            outline: none;
+            background-color: transparent;
             font-size: 14px;
             cursor: pointer;
-            transition: all 0.2s;
         }
 
-        .btn:hover {
-            background: #43a047;
-            transform: translateY(-1px);
-        }
-
-        .btn-sec {
-            background: #f0f0f0;
-            color: #333;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .btn-sec:hover {
-            background: #e0e0e0;
+        /* Responsive Action Bar */
+        @media (max-width: 600px) {
+            .action-bar {
+                padding: 12px 16px;
+                margin-bottom: 16px;
+            }
+            .action-bar-title {
+                font-size: 14px;
+            }
+            .btn92 {
+                font-size: 13px;
+            }
         }
 
         /* ── REPORT CONTAINER ── */
         .report-wrapper {
+            width: 100%;
+            display: flex;
+            justify-content: center;
             box-shadow: none;
-            background: #fff;
-            overflow: hidden;
+            background: transparent;
+            overflow: hidden; /* Hides the overflow of the scaled element */
         }
 
         /* ── SYSTEM MESSAGES ── */
@@ -95,6 +100,7 @@
             width: 100%;
             max-width: 794px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            margin-top: 20px;
         }
 
         #error {
@@ -113,48 +119,240 @@
         }
 
         @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            100% {
-                transform: rotate(360deg);
-            }
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         /* ── PRINT STYLES ── */
         @media print {
-            body {
-                background: #fff;
-                padding: 0;
-            }
-
-            .action-bar {
-                display: none !important;
-            }
-
-            .report-wrapper {
-                box-shadow: none;
-            }
-
-            @page {
-                margin: 0;
-            }
+            body { background: #fff; padding: 0; }
+            .action-bar { display: none !important; }
+            .report-wrapper { box-shadow: none; overflow: visible; }
+            .page { transform: none !important; margin: 0 !important; }
+            @page { margin: 0; }
         }
 
-        /* Fix QR Code border issue */
         #qr-container img {
             border: none !important;
         }
 
-        .btn92 {
+        /* ════════ REPORT DESIGN STYLES ════════ */
+        .page {
+            background-color: white;
+            width: 800px;
+            min-width: 800px; /* Forces it to stay 800px so we can scale it */
+            padding: 40px 50px;
+            box-sizing: border-box;
+            font-family: 'Open Sans', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transform-origin: top center; /* Ensures it scales from the top middle */
+        }
 
-            color: rgb(160, 160, 160);
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .header-title {
+            color: var(--main-green);
+            font-size: 34px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        .header-logo {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-left: -40px;
+        }
+
+        .header-contact {
+            text-align: right;
+            font-size: 13px;
+            color: var(--text-light);
+            line-height: 1.5;
+        }
+
+        .divider {
             border: none;
-            outline: none;
-            background-color: transparent;
+            border-top: 2px solid var(--main-green);
+            margin: 0 0 25px 0;
+        }
+
+        .task-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+
+        .task-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .task-right {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .task-row {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .label {
+            color: var(--main-green);
+            font-size: 18px;
+            font-weight: 500;
+        }
+
+        .label-small {
+            color: var(--main-green);
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .value-box {
+            background-color: var(--light-gray);
+            padding: 5px 12px;
+            font-size: 16px;
+            color: var(--text-dark);
+        }
+
+        .task-left .value-box {
+            width: 180px;
+        }
+
+        .details-grid {
+            display: grid;
+            grid-template-columns: 140px 1fr;
+            gap: 8px 15px;
+            margin-bottom: 35px;
+        }
+
+        .details-grid .label-small {
+            align-self: center;
+        }
+
+        .details-grid .value-box {
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .section {
+            margin-bottom: 25px;
+        }
+
+        .section-title {
+            color: var(--main-green);
+            font-size: 16px;
+            font-weight: 300;
+            margin-bottom: 8px;
+        }
+
+        .section-content {
+            background-color: var(--light-gray);
+            padding: 15px;
+            font-size: 14px;
+            color: var(--text-dark);
+            min-height: 20px;
+        }
+
+        .comments-content {
+            min-height: 40px;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 5px;
+            position: relative;
+        }
+
+        .qr-code {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: 0;
+            width: 45px;
+            height: 45px;
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--main-green);
+        }
+
+        .results-table td {
+            border: 1px solid var(--main-green);
+            padding: 8px 12px;
+            font-size: 14px;
+            color: var(--text-dark);
+            height: 20px;
+        }
+
+        .results-table td:first-child {
+            width: 50%;
+        }
+
+        .footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 50px;
+            margin-bottom: 50px;
+        }
+
+        .footer-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .footer-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .signature-svg {
+            margin-left: 10px;
+            margin-top: -20px;
+        }
+
+        .verification {
+            text-align: center;
+        }
+
+        .verify-text {
+            color: var(--main-green);
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 15px;
+            text-align: justify;
+            letter-spacing: 1px;
+        }
+
+        .verify-key {
+            background-color: var(--light-gray);
+            padding: 10px;
+            font-size: 14px;
+            color: var(--text-dark);
+            letter-spacing: 1px;
         }
     </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 
 <body>
@@ -173,7 +371,7 @@
 
     <!-- Action Bar -->
     <div class="action-bar" id="action-bar" style="display: none;">
-        <div style="font-weight: 800; color: #c4c4c4; font-size: 16px;">Janoshik Analytical</div>
+        <div class="action-bar-title">Janoshik Analytical</div>
         <div style="display: flex; gap: 10px;">
             <button class="btn92">Home</button>
             <button class="btn92">Public</button>
@@ -189,7 +387,6 @@
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         // 1. YOUR FIREBASE CONFIGURATION
-        // !!! REPLACE THIS OBJECT WITH YOUR ACTUAL FIREBASE CONFIG !!!
         const firebaseConfig = {
             apiKey: "AIzaSyDhPTtitT_rX8z0o2uDjRsVwTjAG71mmvk",
             authDomain: "rehobothbank-landing.firebaseapp.com",
@@ -211,11 +408,9 @@
         const today = () => new Date().toISOString().slice(0, 10);
         const fmtShort = iso => { const d = new Date((iso || today()) + "T12:00:00"); const M = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]; return `${String(d.getDate()).padStart(2, "0")} ${M[d.getMonth()]} '${String(d.getFullYear()).slice(2)}`; }
         const fmtLong = iso => { const d = new Date((iso || today()) + "T12:00:00"); const M = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]; return `${String(d.getDate()).padStart(2, "0")} ${M[d.getMonth()]} ${d.getFullYear()}`; }
-        const logoSVG = `<svg width="44" height="32" viewBox="0 0 50 36" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="22" width="7" height="13" fill="#4caf50" rx="1"/><rect x="12" y="14" width="7" height="21" fill="#4caf50" rx="1"/><rect x="22" y="8" width="7" height="27" fill="#4caf50" rx="1"/><rect x="32" y="16" width="7" height="19" fill="#4caf50" rx="1"/><rect x="42" y="4" width="7" height="31" fill="#4caf50" rx="1"/></svg>`;
 
         // ── Fetch Report Logic ──
         async function fetchReport() {
-            // Get the ?key= parameter from the URL
             const urlParams = new URLSearchParams(window.location.search);
             const key = urlParams.get('key');
 
@@ -234,7 +429,10 @@
 
                     el('loading').style.display = 'none';
                     el('action-bar').style.display = 'flex';
-                    el('report-container').style.display = 'block';
+                    el('report-container').style.display = 'flex'; // Changed to flex for centering
+                    
+                    // Trigger scaling logic after render
+                    setTimeout(scaleReport, 50);
                 } else {
                     showError();
                 }
@@ -252,86 +450,181 @@
         // ── Render HTML Template ──
         function renderVisualReport(r) {
             const sigHTML = r.signature
-                ? `<img src="${r.signature}" alt="Signature" style="height:72px;width:auto;object-fit:contain;display:block;" />`
-                : `<span style="font-size:13px;color:#bbb;font-style:italic;">—</span>`;
+                ? `<img src="${r.signature}" alt="Signature" style="height:80px;width:auto;object-fit:contain;margin-top:-20px;margin-left:10px;" />`
+                : `<svg class="signature-svg" width="80" height="80" viewBox="0 0 80 80">
+                    <path d="M40,75 Q42,10 45,60 Q48,45 52,55 Q55,48 60,52 Q65,48 70,50" fill="none" stroke="#666" stroke-width="1" stroke-linecap="round"/>
+                    <path d="M42,80 L50,5" fill="none" stroke="#666" stroke-width="1"/>
+                    <path d="M55,50 L65,45" fill="none" stroke="#666" stroke-width="1"/>
+                   </svg>`;
 
-            const clientRows = [["Client", r.client], ["Sample", r.sample], ["Manufacturer", r.manufacturer], ["Batch", r.batch]]
-                .map(([lbl, val], i) => `<tr style="background:${i % 2 === 0 ? "#f9f9f9" : "#fff"};"><td style="color:#4caf50;font-weight:500;padding:8px 16px;width:140px;">${lbl}</td><td style="padding:8px 16px;color:#222;font-weight:400;">${esc(val)}</td></tr>`).join("");
-
-            const resRows = (r.results || []).map(res => `<tr style="border-bottom:1px solid #d4efd4;"><td style="padding:9px 16px;color:#222;width:58%;font-weight:400;">${esc(res.label)}</td><td style="padding:9px 16px;color:#222;font-weight:400;">${esc(res.value)}</td></tr>`).join("");
+            const resRows = (r.results || []).map(res => `
+                <tr>
+                    <td>${esc(res.label)}</td>
+                    <td>${esc(res.value)}</td>
+                </tr>`).join("");
 
             const html = `
-      <div id="report-inner-wrapper" style="font-family:'Jost','Trebuchet MS',sans-serif;width:794px;background:#fff;padding:52px 64px 44px;box-sizing:border-box;color:#222;line-height:1.5;">
-        <!-- HEADER -->
-        <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:16px;margin-bottom:24px;border-bottom:2.5px solid #4caf50;">
-          <div style="display:flex;align-items:center;gap:24px;">
-            <span style="font-size:36px;font-weight:900;color:#4caf50;letter-spacing:0.5px;line-height:1;">TEST REPORT</span>
-            <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
-              ${logoSVG}
-              <span style="font-size:10.5px;font-weight:900;color:#1a1a1a;letter-spacing:5px;">${esc(r.labName)}</span>
-            </div>
-          </div>
-          <div style="text-align:right;font-size:11.5px;color:#444;line-height:2;font-weight:400;">
-            <div>E-mail:&nbsp; ${esc(r.labEmail)}</div><div>Web:&nbsp;&nbsp;&nbsp; ${esc(r.labWeb)}</div>
-          </div>
-        </div>
-        <!-- TASK + DATES -->
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:32px;">
-          <div style="display:flex;align-items:center;gap:16px;">
-            <span style="color:#4caf50;font-size:15px;font-weight:500;">Task Number</span>
-            <span style="background:#f0f0f0;padding:4px 18px;border-radius:3px;font-size:15px;font-weight:700;letter-spacing:0.3px;">#${r.taskNumber}</span>
-          </div>
-          <div style="text-align:right;font-size:14px;line-height:2.1;font-weight:400;">
-            <div><span style="color:#4caf50;">Testing ordered</span><span style="color:#bbb;margin:0 8px;">&gt;</span><strong>${fmtShort(r.testingOrdered)}</strong></div>
-            <div><span style="color:#4caf50;">Sample received</span><span style="color:#bbb;margin:0 8px;">&gt;</span><strong>${fmtShort(r.sampleReceived)}</strong></div>
-          </div>
-        </div>
-        <!-- CLIENT TABLE -->
-        <table style="width:100%;border-collapse:collapse;margin-bottom:30px;font-size:14px;"><tbody>${clientRows}</tbody></table>
-        <!-- DESC -->
-        <div style="margin-bottom:22px;"><div style="color:#4caf50;font-weight:500;font-size:14px;margin-bottom:6px;">Sample description &gt;</div><div style="background:#f7f7f7;padding:12px 16px;font-size:13.5px;color:#444;min-height:72px;line-height:1.6;">${esc(r.sampleDescription)}</div></div>
-        <div style="margin-bottom:22px;"><div style="color:#4caf50;font-weight:500;font-size:14px;margin-bottom:6px;">Tests requested &gt;</div><div style="background:#f7f7f7;padding:12px 16px;font-size:13.5px;color:#444;min-height:72px;line-height:1.6;">${esc(r.testsRequested)}</div></div>
-        <!-- RESULTS -->
-        <div style="margin-bottom:24px;">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-            <span style="color:#4caf50;font-weight:500;font-size:14px;">Results &gt;</span>
-            <div id="qr-container"></div>
-          </div>
-          <table style="width:100%;border-collapse:collapse;border:1.5px solid #b8e6b8;font-size:14px;"><tbody>${resRows}<tr><td style="padding:9px 16px;"></td><td></td></tr></tbody></table>
-        </div>
-        <!-- COMMENTS -->
-        <div style="margin-bottom:22px;"><div style="color:#4caf50;font-weight:500;font-size:14px;margin-bottom:6px;">Comments &gt;</div><div style="background:#f7f7f7;padding:12px 16px;font-size:13.5px;color:#444;min-height:68px;line-height:1.6;">${esc(r.comments)}</div></div>
-        <!-- FOOTER -->
-        <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:28px;margin-top:8px;">
-          <div style="font-size:14px;"><span style="color:#4caf50;">Analysis conducted</span><span style="color:#bbb;margin:0 8px;">&gt;</span><span style="background:#f0f0f0;padding:4px 16px;border-radius:3px;font-weight:700;font-size:15px;">${fmtLong(r.analysisDate)}</span></div>
-          <div style="display:flex;align-items:center;gap:12px;font-size:14px;"><span style="color:#4caf50;">Signature &gt;</span>${sigHTML}</div>
-        </div>
-        <!-- VERIFY -->
-        <div style="border-top:1px solid #e0e0e0;padding-top:18px;">
-          <div style="font-size:13px;color:#4caf50;margin-bottom:10px;font-weight:400;">Verify this test at <strong>${esc(r.labWeb)}/verify/</strong> with the following unique key</div>
-          <div style="text-align:center;font-size:16px;font-weight:700;letter-spacing:3.5px;color:#222;background:#f5f5f5;padding:13px 0;border-radius:3px;">${r.uniqueKey}</div>
-        </div>
-      </div>`;
+            <div id="report-inner-wrapper" class="page">
+                <!-- Header -->
+                <div class="header">
+                    <div class="header-title">TEST REPORT</div>
+                    <div class="header-logo">
+                        <img src="../report/logo.JPG" alt="logo" height="60px" width="100px" style="margin-bottom: 15px;"/>
+                    </div>
+                    <div class="header-contact">
+                        E-mail: ${esc(r.labEmail || 'info@janoshik.com')}<br>
+                        Web: ${esc(r.labWeb || 'www.janoshik.com')}
+                    </div>
+                </div>
+
+                <hr class="divider">
+
+                <!-- Task Info -->
+                <div class="task-info">
+                    <div class="task-left">
+                        <div class="label">Task Number</div>
+                        <div class="value-box">#${esc(r.taskNumber)}</div>
+                    </div>
+                    <div class="task-right">
+                        <div class="task-row">
+                            <div class="label-small">Testing ordered ></div>
+                            <div class="value-box">${fmtShort(r.testingOrdered)}</div>
+                        </div>
+                        <div class="task-row">
+                            <div class="label-small">Sample received ></div>
+                            <div class="value-box">${fmtShort(r.sampleReceived)}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Details Grid -->
+                <div class="details-grid">
+                    <div class="label-small">Client</div>
+                    <div class="value-box">${esc(r.client)}</div>
+
+                    <div class="label-small">Sample</div>
+                    <div class="value-box">${esc(r.sample)}</div>
+
+                    <div class="label-small">Manufacturer</div>
+                    <div class="value-box">${esc(r.manufacturer)}</div>
+
+                    <div class="label-small">Batch</div>
+                    <div class="value-box">${esc(r.batch)}</div>
+                </div>
+
+                <!-- Sample Description -->
+                <div class="section">
+                    <div class="section-title">Sample description ></div>
+                    <div class="section-content">
+                        ${esc(r.sampleDescription)}
+                    </div>
+                </div>
+
+                <!-- Tests Requested -->
+                <div class="section">
+                    <div class="section-title">Tests requested ></div>
+                    <div class="section-content">
+                        ${esc(r.testsRequested)}
+                    </div>
+                </div>
+
+                <!-- Results -->
+                <div class="section">
+                    <div class="results-header">
+                        <div class="section-title" style="margin-bottom: 0;">Results ></div>
+                        <div id="qr-container" class="qr-code"></div>
+                    </div>
+                    <table class="results-table">
+                        ${resRows}
+                        <tr>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!-- Comments -->
+                <div class="section">
+                    <div class="section-title">Comments ></div>
+                    <div class="section-content comments-content">
+                        ${esc(r.comments)}
+                    </div>
+                </div>
+
+                <!-- Footer (Signatures) -->
+                <div class="footer">
+                    <div class="footer-left">
+                        <div class="label-small">Analysis conducted ></div>
+                        <div class="value-box">${fmtLong(r.analysisDate)}</div>
+                    </div>
+                    <div class="footer-right">
+                        <div class="label-small">Signature ></div>
+                        ${sigHTML}
+                    </div>
+                </div>
+
+                <!-- Verification -->
+                <div class="verification">
+                    <div class="verify-text">Verify this test at ${esc(r.labWeb || 'www.janoshik.com')}/verify/ with the following unique key</div>
+                    <div class="verify-key">${esc(r.uniqueKey)}</div>
+                </div>
+            </div>`;
 
             el('report-container').innerHTML = html;
 
-            // Generate QR
             if (typeof QRCode !== "undefined") {
                 new QRCode(el("qr-container"), {
-                    text: `https://${r.labWeb}/verify/${r.uniqueKey}`,
-                    width: 54, height: 54, colorDark: "#1a1a1a", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.M,
+                    text: `https://${r.labWeb || 'www.janoshik.com'}/verify/${r.uniqueKey}`,
+                    width: 45, 
+                    height: 45, 
+                    colorDark: "#000000", 
+                    colorLight: "#ffffff", 
+                    correctLevel: QRCode.CorrectLevel.M,
                 });
             }
         }
 
+        // ── Responsive Scaling Logic ──
+        function scaleReport() {
+            const wrapper = el('report-container');
+            const page = el('report-inner-wrapper');
+            if (!wrapper || !page) return;
+
+            const screenWidth = window.innerWidth;
+            const padding = 20; // Leave a little breathing room on the sides
+            const availableWidth = screenWidth - padding;
+
+            if (availableWidth < 800) {
+                // Calculate scale ratio
+                const scale = availableWidth / 800;
+                page.style.transform = `scale(${scale})`;
+                
+                // Adjust wrapper height so it doesn't leave huge empty space at the bottom
+                const rect = page.getBoundingClientRect();
+                wrapper.style.height = `${rect.height}px`;
+            } else {
+                // Reset for desktop
+                page.style.transform = 'none';
+                wrapper.style.height = 'auto';
+            }
+        }
+
+        // Re-calculate scale whenever the user rotates their phone or resizes the window
+        window.addEventListener('resize', scaleReport);
+
         // ── Download JPG Logic ──
         window.downloadReport = async function () {
             if (!currentReport) return;
-            const btn = el('btn-download');
-            btn.disabled = true; btn.textContent = "Processing...";
+            
+            const page = el('report-inner-wrapper');
+            const wrapper = el('report-container');
+
+            // 1. Temporarily remove scaling so html2canvas captures it in high quality
+            page.style.transform = 'none';
+            wrapper.style.height = 'auto';
 
             try {
-                const canvas = await html2canvas(el('report-inner-wrapper'), {
+                const canvas = await html2canvas(page, {
                     scale: 2, useCORS: true, allowTaint: true, backgroundColor: "#ffffff", logging: false
                 });
                 const link = document.createElement("a");
@@ -342,7 +635,8 @@
                 alert("Download failed. Ensure images (signatures) are CORS compliant.");
             }
 
-            btn.disabled = false; btn.textContent = "⬇ Download JPG";
+            // 2. Restore scaling immediately after capture
+            scaleReport();
         }
 
         // Start fetching on page load
