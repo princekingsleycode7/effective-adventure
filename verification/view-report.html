@@ -429,7 +429,7 @@
 
                     el('loading').style.display = 'none';
                     el('action-bar').style.display = 'flex';
-                    el('report-container').style.display = 'flex'; // Changed to flex for centering
+                    el('report-container').style.display = 'flex'; 
                     
                     // Trigger scaling logic after render
                     setTimeout(scaleReport, 50);
@@ -473,7 +473,7 @@
                     </div>
                     <div class="header-contact">
                         E-mail: ${esc(r.labEmail || 'info@janoshik.com')}<br>
-                        Web: ${esc(r.labWeb || 'www.janoshik.com')}
+                        Web: ${esc(r.labWeb || 'janoshk.vercel.app')}
                     </div>
                 </div>
 
@@ -565,16 +565,20 @@
 
                 <!-- Verification -->
                 <div class="verification">
-                    <div class="verify-text">Verify this test at ${esc(r.labWeb || 'www.janoshik.com')}/verify/ with the following unique key</div>
+                    <div class="verify-text">Verify this test at janoshk.vercel.app with the following unique key</div>
                     <div class="verify-key">${esc(r.uniqueKey)}</div>
                 </div>
             </div>`;
 
             el('report-container').innerHTML = html;
 
+            // Generate QR Code that dynamically points to the exact URL of this specific report
             if (typeof QRCode !== "undefined") {
+                // This ensures it always goes to http://janoshk.vercel.app/?key=YOUR_KEY
+                const verifyUrl = `${window.location.origin}${window.location.pathname}?key=${r.uniqueKey}`;
+                
                 new QRCode(el("qr-container"), {
-                    text: `https://${r.labWeb || 'www.janoshik.com'}/verify/${r.uniqueKey}`,
+                    text: verifyUrl,
                     width: 45, 
                     height: 45, 
                     colorDark: "#000000", 
@@ -591,25 +595,21 @@
             if (!wrapper || !page) return;
 
             const screenWidth = window.innerWidth;
-            const padding = 20; // Leave a little breathing room on the sides
+            const padding = 20; 
             const availableWidth = screenWidth - padding;
 
             if (availableWidth < 800) {
-                // Calculate scale ratio
                 const scale = availableWidth / 800;
                 page.style.transform = `scale(${scale})`;
                 
-                // Adjust wrapper height so it doesn't leave huge empty space at the bottom
                 const rect = page.getBoundingClientRect();
                 wrapper.style.height = `${rect.height}px`;
             } else {
-                // Reset for desktop
                 page.style.transform = 'none';
                 wrapper.style.height = 'auto';
             }
         }
 
-        // Re-calculate scale whenever the user rotates their phone or resizes the window
         window.addEventListener('resize', scaleReport);
 
         // ── Download JPG Logic ──
@@ -619,7 +619,6 @@
             const page = el('report-inner-wrapper');
             const wrapper = el('report-container');
 
-            // 1. Temporarily remove scaling so html2canvas captures it in high quality
             page.style.transform = 'none';
             wrapper.style.height = 'auto';
 
@@ -635,7 +634,6 @@
                 alert("Download failed. Ensure images (signatures) are CORS compliant.");
             }
 
-            // 2. Restore scaling immediately after capture
             scaleReport();
         }
 
