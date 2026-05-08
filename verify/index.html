@@ -587,105 +587,138 @@ var wpcf7_recaptcha = {
 };
 //# sourceURL=wpcf7-recaptcha-js-before
 </script>
-<!-- Replace the existing backend.js script tag with this 
-<script src="../backend.js" defer></script>-->
+
+
+
 <!-- FIREBASE VERIFICATION LOGIC -->
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    // 1. UPDATE THIS WITH YOUR ACTUAL FIREBASE CONFIG
+    // 1. Firebase configuration credentials
     const firebaseConfig = {
-         apiKey: "AIzaSyDhPTtitT_rX8z0o2uDjRsVwTjAG71mmvk",
-            authDomain: "rehobothbank-landing.firebaseapp.com",
-            projectId: "rehobothbank-landing",
-            storageBucket: "rehobothbank-landing.firebasestorage.app",
-            messagingSenderId: "1086996659612",
-            appId: "1:1086996659612:web:6905bcad01ada368bc1c59"
+        apiKey: "AIzaSyDhPTtitT_rX8z0o2uDjRsVwTjAG71mmvk",
+        authDomain: "rehobothbank-landing.firebaseapp.com",
+        projectId: "rehobothbank-landing",
+        storageBucket: "rehobothbank-landing.firebasestorage.app",
+        messagingSenderId: "1086996659612",
+        appId: "1:1086996659612:web:6905bcad01ada368bc1c59"
     };
 
     // Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // Grab elements
+    // Grab existing DOM elements
     const form = document.getElementById('verification-form');
     const submitBtn = form.querySelector('button[type="submit"]');
 
-    // Create a container for the success UI right after the form
+    // Dynamically insert the success wrapper right below your form inside the WordPress layout container
     const resultContainer = document.createElement('div');
     resultContainer.id = 'verification-result-container';
     resultContainer.style.display = 'none';
     form.parentNode.insertBefore(resultContainer, form.nextSibling);
 
-    // Handle Form Submission
+    // Global verify function bound to window to support inline html handlers (Enter keys/clicks)
     window.handleVerify = async function(event) {
-        if (event) event.preventDefault(); // Stop page reload
+        if (event && typeof event.preventDefault === 'function') {
+            event.preventDefault();
+        }
 
         const taskNum = document.getElementById('task_number').value.trim();
         const uniqueKey = document.getElementById('unique_key').value.trim().toUpperCase();
 
         if (!taskNum || !uniqueKey) {
-            if(typeof showToast === 'function') showToast("Please enter both Task Number and Unique Key.");
+            if (typeof showToast === 'function') {
+                showToast("Please enter both Task Number and Unique Key.");
+            } else {
+                alert("Please enter both Task Number and Unique Key.");
+            }
             return;
         }
 
-        // Show loading state
-        const originalText = submitBtn.innerText;
+        // Change button status using your existing layout parameters
+        const originalText = submitBtn.innerText || submitBtn.textContent;
         submitBtn.innerText = "Verifying...";
         submitBtn.disabled = true;
 
         try {
-            // Because we saved reports using the uniqueKey as the Document ID in the generator
+            // Find document in your database where Document ID is the uniqueKey
             const docRef = doc(db, "reports", uniqueKey);
             const docSnap = await getDoc(docRef);
 
             if (docSnap.exists()) {
                 const data = docSnap.data();
                 
-                // Double check the task number matches to prevent brute-forcing keys
+                // Confirm task number match
                 if (String(data.taskNumber) === String(taskNum)) {
                     
-                    // Hide the form
-                    form.style.display = 'none';
+                    // Hide verification inputs
+                    submitBtn.style.display = 'none';
                     
-                    // Show the Success UI
+                    // Inject success layout matching your site branding, colors, and layout structure
                     resultContainer.innerHTML = `
-                        <div class="mt-[30px] p-6 border-2 border-[#09AD9D] rounded-lg bg-[#f0fdfa]">
-                            <h3 style="color: #09AD9D; font-size: 16px; font-weight: bold; margin-bottom: 20px;">
-                                 This test is in our database. You can open the report and check if the data match your report.
+                        <div class="mt-[30px] p-8 border-2 border-[#09AD9D] rounded-3xl bg-[#f0fdfa] transition-all duration-300" data-aos="fade-up">
+                            <h3 class="font-bold text-[20px] text-[#005758] mb-4">
+                                ✅ Authentic Report Verified
                             </h3>
-                            <div class="flex gap-[15px]">
-                                <button onclick="viewReport('${uniqueKey}')" class="button button-dark" style="background: #09AD9D; color: white; border: none;">
+                            <p class="text-slate-600 mb-6 text-[15px] sm:text-[16px] leading-relaxed">
+                                This test is in our database. You can open the generated report image in a new tab to verify the contents match your paper copy.
+                            </p>
+                            <div class="flex flex-col sm:flex-row gap-[12px]">
+                                <button onclick="window.viewReport('${uniqueKey}')" class="button button-dark !bg-[#09AD9D] hover:!bg-[#005758] text-white font-bold transition-all duration-300 border-0 cursor-pointer">
                                     📄 View Report
                                 </button>
-                                <button onclick="resetVerification()" class="button button-dark" style="background: #1D1D1B; color: white; border: none;">
+                                <button onclick="window.resetVerification()" class="button button-dark !bg-[#1D1D1B] hover:!bg-black text-white font-bold transition-all duration-300 border-0 cursor-pointer">
                                     ↺ Verify Another
                                 </button>
                             </div>
                         </div>
                     `;
                     resultContainer.style.display = 'block';
-                    if(typeof showToast === 'function') showToast("Report successfully verified!");
+
+                    // Re-initialize AOS on the dynamically generated element if layout animations are active
+                    if (window.AOS && typeof window.AOS.refresh === 'function') {
+                        window.AOS.refresh();
+                    }
+
+                    if (typeof showToast === 'function') {
+                        showToast("Report successfully verified!");
+                    }
                 } else {
-                    if(typeof showToast === 'function') showToast("Error: Task Number does not match the Unique Key.");
+                    if (typeof showToast === 'function') {
+                        showToast("Error: Task Number does not match the Unique Key.");
+                    } else {
+                        alert("Error: Task Number does not match the Unique Key.");
+                    }
                 }
             } else {
-                if(typeof showToast === 'function') showToast("Invalid Verification Key. Report not found.");
+                if (typeof showToast === 'function') {
+                    showToast("Invalid Verification Key. Report not found.");
+                } else {
+                    alert("Invalid Verification Key. Report not found.");
+                }
             }
         } catch (error) {
             console.error(error);
-            if(typeof showToast === 'function') showToast("Database Error: " + error.message);
+            if (typeof showToast === 'function') {
+                showToast("Database Error: " + error.message);
+            } else {
+                alert("Database Error: " + error.message);
+            }
         } finally {
             submitBtn.innerText = originalText;
             submitBtn.disabled = false;
         }
     };
 
-    // Override the form submission so hitting "Enter" triggers our script
-    form.addEventListener('submit', window.handleVerify);
+    // Standard intercept event handler
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        window.handleVerify(e);
+    });
 
-    // Logic to reset the form
+    // Reset verification inputs and restore state
     window.resetVerification = function() {
         document.getElementById('task_number').value = '';
         document.getElementById('unique_key').value = '';
@@ -693,10 +726,9 @@ var wpcf7_recaptcha = {
         form.style.display = 'block';
     };
 
-    // Logic to open the report in a new tab
+    // Safely redirect to new tab report view passing key parameter
     window.viewReport = function(key) {
-        // Opens a standalone report viewer page, passing the key in the URL
-        window.open('../verify/view-report.html?key=' + key, '_blank');
+        window.open('view-report.html?key=' + key, '_blank');
     };
 </script>
 <!-- END FIREBASE VERIFICATION LOGIC -->

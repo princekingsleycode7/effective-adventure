@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DrPeptide — Report Generator (Firebase + Cloudinary)</title>
+    <!-- Include Jost for UI, Open Sans for Report Layout -->
+    <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700;800;900&family=Open+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --g: #4caf50;
+            --g-light: #e8f5e9;
+            --g-border: #c8e6c9;
+            --font: 'Jost', 'Trebuchet MS', sans-serif;
+            --bg: #f2f4f2;
+            --white: #fff;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            --text: #222;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; }
+
+        /* ── NAV ── */
+        .nav { background: var(--white); border-bottom: 2px solid var(--g); padding: 0 28px; display: flex; align-items: center; justify-content: space-between; height: 60px; position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 8px rgba(0, 0, 0, 0.07); }
+        .nav-brand { display: flex; align-items: center; gap: 10px; }
+        .nav-brand-name { font-weight: 900; font-size: 16px; color: #1a1a1a; letter-spacing: 3px; }
+        .badge { background: var(--g-light); color: var(--g); padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+
+        /* ── LAYOUT ── */
+        .container { max-width: 960px; margin: 0 auto; padding: 40px 20px; }
+        .card { background: var(--white); border-radius: 12px; padding: 40px; box-shadow: var(--shadow); }
+        .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 20px; }
+        .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin-bottom: 20px; }
+
+        /* ── FORMS ── */
+        .lbl { font-size: 13px; font-weight: 700; color: #555; margin-bottom: 6px; display: block; }
+        .input { border: 1px solid #ddd; border-radius: 6px; padding: 10px 14px; font-size: 14px; width: 100%; outline: none; font-family: var(--font); transition: all 0.2s; background: #fafafa; }
+        .input:focus { border-color: var(--g); background: #fff; box-shadow: 0 0 0 3px var(--g-light); }
+        textarea.input { height: 80px; resize: vertical; }
+        fieldset { border: 1px solid var(--g-border); border-radius: 8px; padding: 20px; margin-bottom: 24px; background: #fff; }
+        legend { background: var(--g-light); color: var(--g); font-weight: 800; font-size: 12px; padding: 4px 12px; border-radius: 4px; letter-spacing: 1px; }
+
+        /* ── BUTTONS ── */
+        .btn { background: var(--g); color: #fff; border: none; padding: 12px 28px; border-radius: 6px; font-weight: 700; font-size: 15px; cursor: pointer; font-family: var(--font); transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn:hover { background: #43a047; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(76, 175, 80, 0.2); }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
+        .btn-sec { background: #f0f0f0; color: #333; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; font-size: 14px; cursor: pointer; transition: background 0.2s; }
+        .btn-sec:hover { background: #e0e0e0; }
+        .btn-danger { background: #fdecea; color: #c62828; border: none; padding: 8px 12px; border-radius: 5px; font-weight: 600; font-size: 13px; cursor: pointer; transition: background 0.15s; }
+
+        /* ── DYNAMIC ROWS ── */
+        .result-row { display: flex; gap: 12px; margin-bottom: 10px; align-items: center; background: #f9f9f9; padding: 8px; border-radius: 6px; border: 1px solid #eee; }
+        .result-row .input { margin-bottom: 0; background: #fff; }
+
+        /* ── VIEWS ── */
+        .view { display: none; animation: fadeIn 0.3s ease-in-out; }
+        .view.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ── OVERLAY LOADER ── */
+        .global-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; display: none; }
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--g); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 20px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .overlay-text { font-size: 18px; font-weight: 700; color: #4caf50; letter-spacing: 0.5px; }
+
+        .alert { padding: 12px 16px; border-radius: 6px; margin-bottom: 20px; font-weight: 600; font-size: 14px; display: none; }
+        .alert-error { background: #fdecea; color: #c62828; border: 1px solid #f9a8a8; }
+
+        /* ── REPORT PREVIEW WRAPPER ── */
+        .overflow-x { overflow-x: auto; padding: 40px 20px; background: #e0e0e0; border-radius: 8px; text-align: center; display: flex; justify-content: center; }
+        #qr-container img { border: none !important; }
+
+        /* ════════ REPORT DESIGN STYLES (MATCHES VIEWER EXACTLY) ════════ */
+        .page { background-color: white; width: 800px; min-width: 800px; padding: 40px 50px; box-sizing: border-box; font-family: 'Open Sans', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: left; margin: 0 auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .header-title { color: #3cb850; font-size: 34px; font-weight: 500; letter-spacing: 0.5px; }
+        .header-logo { text-align: center; display: flex; flex-direction: column; align-items: center; margin-left: -40px; }
+        .header-contact { text-align: right; font-size: 13px; color: #555; line-height: 1.5; }
+        .divider { border: none; border-top: 2px solid #3cb850; margin: 0 0 25px 0; }
+        .task-info { display: flex; justify-content: space-between; margin-bottom: 30px; }
+        .task-left { display: flex; align-items: center; gap: 15px; }
+        .task-right { display: flex; flex-direction: column; gap: 8px; }
+        .task-row { display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
+        .label { color: #3cb850; font-size: 18px; font-weight: 500; }
+        .label-small { color: #3cb850; font-size: 16px; font-weight: 500; }
+        .value-box { background-color: #f2f2f2; padding: 5px 12px; font-size: 16px; color: #000; }
+        .task-left .value-box { width: 180px; }
+        .details-grid { display: grid; grid-template-columns: 140px 1fr; gap: 8px 15px; margin-bottom: 35px; }
+        .details-grid .label-small { align-self: center; }
+        .details-grid .value-box { width: 100%; box-sizing: border-box; }
+        .section { margin-bottom: 25px; }
+        .section-title { color: #3cb850; font-size: 16px; font-weight: 300; margin-bottom: 8px; }
+        .section-content { background-color: #f2f2f2; padding: 15px; font-size: 14px; color: #000; min-height: 20px; }
+        .comments-content { min-height: 40px; }
+        .results-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 5px; position: relative; }
+        .qr-code { position: absolute; left: 50%; transform: translateX(-50%); bottom: 0; width: 45px; height: 45px; }
+        .results-table { width: 100%; border-collapse: collapse; border: 1px solid #3cb850; }
+        .results-table td { border: 1px solid #3cb850; padding: 8px 12px; font-size: 14px; color: #000; height: 20px; }
+        .results-table td:first-child { width: 50%; }
+        .footer { display: flex; justify-content: space-between; align-items: center; margin-top: 50px; margin-bottom: 50px; }
+        .footer-left { display: flex; align-items: center; gap: 10px; }
+        .footer-right { display: flex; align-items: center; gap: 10px; }
+        .signature-svg { margin-left: 10px; margin-top: -20px; }
+        .verification { text-align: center; }
+        .verify-text { color: #3cb850; font-size: 16px; font-weight: 500; margin-bottom: 15px; text-align: justify; letter-spacing: 1px; }
+        .verify-key { background-color: #f2f2f2; padding: 10px; font-size: 14px; color: #000; letter-spacing: 1px; }
+    </style>
+</head>
+
+<body>
+
+    <!-- OVERLAY -->
+    <div id="global-overlay" class="global-overlay">
+        <div class="loader"></div>
+        <div class="overlay-text" id="overlay-text">Processing...</div>
+    </div>
+
+    <!-- NAV -->
+    <nav class="nav">
+        <div class="nav-brand">
+            <svg width="22" height="16" viewBox="0 0 50 36">
+                <rect x="2" y="22" width="7" height="13" fill="#4caf50" rx="1" />
+                <rect x="12" y="14" width="7" height="21" fill="#4caf50" rx="1" />
+                <rect x="22" y="8" width="7" height="27" fill="#4caf50" rx="1" />
+                <rect x="32" y="16" width="7" height="19" fill="#4caf50" rx="1" />
+                <rect x="42" y="4" width="7" height="31" fill="#4caf50" rx="1" />
+            </svg>
+            <span class="nav-brand-name">DRPEPTIDE</span>
+        </div>
+        <span class="badge">Firebase + Cloudinary Admin</span>
+    </nav>
+
+    <div class="container">
+        <div id="system-msg" class="alert alert-error"></div>
+
+        <!-- VIEW: Form -->
+        <div class="view active" id="view-form">
+            <div class="card">
+                <h2 style="font-weight:900; margin-bottom: 8px; font-size: 24px;">Generate New Report</h2>
+                <p style="color:#666; margin-bottom: 30px; font-size: 14px;">Fill out the details below. This will generate the image, save it to Cloudinary, and store data in Firebase.</p>
+
+                <fieldset>
+                    <legend>LAB INFORMATION</legend>
+                    <div class="grid-3">
+                        <div><label class="lbl">Lab Name</label><input class="input" id="f-labName" value="DRPEPTIDE" /></div>
+                        <div><label class="lbl">Lab Email</label><input class="input" id="f-labEmail" value="info@drpeptide.com" /></div>
+                        <div><label class="lbl">Lab Website</label><input class="input" id="f-labWeb" value="janoshk.vercel.app" /></div>
+                    </div>
+                </fieldset>
+
+                <fieldset>
+                    <legend>REPORT DETAILS</legend>
+                    <div class="grid-3">
+                        <div><label class="lbl">Testing Ordered</label><input type="date" class="input" id="f-testingOrdered" /></div>
+                        <div><label class="lbl">Sample Received</label><input type="date" class="input" id="f-sampleReceived" /></div>
+                        <div><label class="lbl">Analysis Date</label><input type="date" class="input" id="f-analysisDate" /></div>
+                    </div>
+                    <div class="grid-2">
+                        <div><label class="lbl">Client Name</label><input class="input" id="f-client" placeholder="Client Name" /></div>
+                        <div><label class="lbl">Sample ID</label><input class="input" id="f-sample" placeholder="e.g. BPC-157 5mg" /></div>
+                        <div><label class="lbl">Manufacturer</label><input class="input" id="f-manufacturer" placeholder="Manufacturer Name" /></div>
+                        <div><label class="lbl">Batch Number</label><input class="input" id="f-batch" value="Unknown" /></div>
+                    </div>
+                    <div style="margin-bottom: 16px;">
+                        <label class="lbl">Sample Description</label>
+                        <textarea class="input" id="f-sampleDescription">See picture or pictures attached.</textarea>
+                    </div>
+                    <div style="margin-bottom: 16px;">
+                        <label class="lbl">Tests Requested</label>
+                        <textarea class="input" id="f-testsRequested">Assessment of a peptide vial or vials.</textarea>
+                    </div>
+                    <div style="margin-bottom: 16px;">
+                        <label class="lbl">Comments (Optional)</label>
+                        <textarea class="input" id="f-comments"></textarea>
+                    </div>
+                </fieldset>
+
+                <fieldset>
+                    <legend>RESULTS</legend>
+                    <div id="results-rows" style="margin-bottom: 16px;"></div>
+                    <button class="btn-sec" onclick="addResultRow()">+ Add Result Row</button>
+                </fieldset>
+
+                <fieldset>
+                    <legend>SIGNATURE (Optional)</legend>
+                    <div style="display:flex;align-items:center;gap:16px;">
+                        <input type="file" id="f-sig-upload" accept="image/png, image/jpeg" class="input" style="width: auto; background: transparent; border: none; padding: 0;" />
+                        <img id="f-sig-preview" style="height:50px; display:none; border:1px solid #ddd; padding:2px; border-radius:4px; background:#fff;" />
+                        <button class="btn-sec" id="f-sig-clear" style="display:none; padding: 6px 12px; font-size: 12px;" onclick="clearSig()">Remove</button>
+                    </div>
+                </fieldset>
+
+                <div style="display: flex; justify-content: flex-end; border-top: 2px solid #eee; padding-top: 24px;">
+                    <button class="btn" id="btn-generate" onclick="handleGenerate()">Save to Cloudinary & Firebase</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW: Preview -->
+        <div class="view" id="view-preview">
+            <div class="card" style="margin-bottom: 20px; background: var(--g-light); border: 1px solid var(--g-border);">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+                    <div>
+                        <h2 style="color: var(--g); font-weight: 900; margin-bottom: 4px;">✅ Image & Report Saved to Database</h2>
+                        <div style="color: #444; font-size: 14px;">
+                            Verification Key: <strong style="letter-spacing: 2px; font-size: 16px; color: #111;" id="preview-key"></strong>
+                            <span style="margin: 0 10px; color: #ccc;">|</span>
+                            Task Number: <strong id="preview-task"></strong>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn-sec" onclick="resetForm()">+ Create Another</button>
+                        <button class="btn" id="btn-download" onclick="downloadReport()">⬇ Download JPG Again</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="overflow-x">
+                <div id="report-container"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ══════════════ FIREBASE & LOGIC ══════════════ -->
+    <script type="module">
+        // 1. Import Firebase Firestore SDKs (Storage removed)
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, doc, setDoc, getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // 2. YOUR FIREBASE CONFIGURATION
+        const firebaseConfig = {
+            apiKey: "AIzaSyDhPTtitT_rX8z0o2uDjRsVwTjAG71mmvk",
+            authDomain: "rehobothbank-landing.firebaseapp.com",
+            projectId: "rehobothbank-landing",
+            storageBucket: "rehobothbank-landing.firebasestorage.app",
+            messagingSenderId: "1086996659612",
+            appId: "1:1086996659612:web:6905bcad01ada368bc1c59"
+        };
+
+        // 3. YOUR CLOUDINARY SETTINGS
+        // !!! YOU MUST FILL THESE TWO VARIABLES OUT FOR UPLOADS TO WORK !!!
+        const CLOUDINARY_CLOUD_NAME = "dsgk1zlj1"; 
+        const CLOUDINARY_UPLOAD_PRESET = "janoshik"; 
+
+        // Initialize Firebase
+        let app, db;
+        try {
+            app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+        } catch (error) {
+            showError("Firebase Initialization Failed: " + error.message);
+        }
+
+        // ── Global State ──
+        const State = {
+            results: [{ label: "Purity", value: "" }],
+            logoBase64: "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/4QLiRXhpZgAATU0AKgAAAAgABAE7AAIAAAAIAAABSodpAAQAAAABAAABUpydAAEAAAAQAAACyuocAAcAAAEMAAAAPgAAAAAc6gAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQUNFUiBQQwAABZADAAIAAAAUAAACoJAEAAIAAAAUAAACtJKRAAIAAAADNjUAAJKSAAIAAAADNjUAAOocAAcAAAEMAAABlAAAAAAc6gAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMjAyNjowNTowNSAwNjo1NTo1NgAyMDI2OjA1OjA1IDA2OjU1OjU2AAAAQQBDAEUAUgAgAFAAQwAAAP/hBBpodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvADw/eHBhY2tldCBiZWdpbj0n77u/JyBpZD0nVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkJz8+DQo8eDp4bXBtZXRhIHhtbG5zOng9ImFkb2JlOm5zOm1ldGEvIj48cmRmOlJERiB4bWxuczpyZGY9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkvMDIvMjItcmRmLXN5bnRheC1ucyMiPjxyZGY6RGVzY3JpcHRpb24gcmRmOmFib3V0PSJ1dWlkOmZhZjViZGQ1LWJhM2QtMTFkYS1hZDMxLWQzM2Q3NTE4MmYxYiIgeG1sbnM6ZGM9Imh0dHA6Ly9wdXJsLm9yZy9kYy9lbGVtZW50cy8xLjEvIi8+PHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9InV1aWQ6ZmFmNWJkZDUtYmEzZC0xMWRhLWFkMzEtZDMzZDc1MTgyZjFiIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iPjx4bXA6Q3JlYXRlRGF0ZT4yMDI2LTA1LTA1VDA2OjU1OjU2LjY1NDwveG1wOkNyZWF0ZURhdGU+PC9yZGY6RGVzY3JpcHRpb24+PHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9InV1aWQ6ZmFmNWJkZDUtYmEzZC0xMWRhLWFkMzEtZDMzZDc1MTgyZjFiIiB4bWxuczpkYz0iaHR0cDovL3B1cmwub3JnL2RjL2VsZW1lbnRzLzEuMS8iPjxkYzpjcmVhdG9yPjxyZGY6U2VxIHhtbG5zOnJkZj0iaHR0cDovL3d3dy53My5vcmcvMTk5OS8wMi8yMi1yZGYtc3ludGF4LW5zIyI+PHJkZjpsaT5BQ0VSIFBDPC9yZGY6bGk+PC9yZGY6U2VxPg0KCQkJPC9kYzpjcmVhdG9yPjwvcmRmOkRlc2NyaXB0aW9uPjwvcmRmOlJERj48L3g6eG1wbWV0YT4NCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA8P3hwYWNr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",
+
+            signatureBase64: "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/4QLiRXhpZgAATU0AKgAAAAgABAE7AAIAAAAIAAABSodpAAQAAAABAAABUpydAAEAAAAQAAACyuocAAcAAAEMAAAAPgAAAAAc6gAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQUNFUiBQQwAABZADAAIAAAAUAAACoJAEAAIAAAAUAAACtJKRAAIAAAADNDQAAJKSAAIAAAADNDQAAOocAAcAAAEMAAABlAAAAAAc6gAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMjAyNjowNTowNCAxNTo0NDo0NAAyMDI2OjA1OjA0IDE1OjQ0OjQ0AAAAQQBDAEUAUgAgAFAAQwAAAP/hBBpodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvADw/eHBhY2tldCBiZWdpbj0n77u/JyBpZD0nVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkJz8+DQo8eDp4bXBtZXRhIHhtbG5zOng9ImFkb2JlOm5zOm1ldGEvIj48cmRmOlJERiB4bWxuczpyZGY9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkvMDIvMjItcmRmLXN5bnRheC1ucyMiPjxyZGY6RGVzY3JpcHRpb24gcmRmOmFib3V0PSJ1dWlkOmZhZjViZGQ1LWJhM2QtMTFkYS1hZDMxLWQzM2Q3NTE4MmYxYiIgeG1sbnM6ZGM9Imh0dHA6Ly9wdXJsLm9yZy9kYy9lbGVtZW50cy8xLjEvIi8+PHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9InV1aWQ6ZmFmNWJkZDUtYmEzZC0xMWRhLWFkMzEtZDMzZDc1MTgyZjFiIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iPjx4bXA6Q3JlYXRlRGF0ZT4yMDI2LTA1LTA0VDE1OjQ0OjQ0LjQ0MjwveG1wOkNyZWF0ZURhdGU+PC9yZGY6RGVzY3JpcHRpb24+PHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9InV1aWQ6ZmFmNWJkZDUtYmEzZC0xMWRhLWFkMzEtZDMzZDc1MTgyZjFiIiB4bWxuczpkYz0iaHR0cDovL3B1cmwub3JnL2RjL2VsZW1lbnRzLzEuMS8iPjxkYzpjcmVhdG9yPjxyZGY6U2VxIHhtbG5zOnJkZj0iaHR0cDovL3d3dy53My5vcmcvMTk5OS8wMi8yMi1yZGYtc3ludGF4LW5zIyI+PHJkZjpsaT5BQ0VSIFBDPC9yZGY6bGk+PC9yZGY6U2VxPg0KCQkJPC9kYzpjcmVhdG9yPjwvcmRmOkRlc2NyaXB0aW9uPjwvcmRmOlJERj48L3g6eG1wbWV0YT4NCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA8P3hwYWNrZXQgZW5kPSd3Jz8+/9sAQwAHBQUGBQQHBgUGCAcHCAoRCwoJCQoVDxAMERgVGhkYFRgXGx4nIRsdJR0XGCIuIiUoKSssKxogLzMvKjInKisq/9sAQwEHCAgKCQoUCwsUKhwYHCoqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioq/8AAEQgCDwERAwEiAAIRAQMRAf/EAB8AAAEFAQEBAQEBAAAAAAAAAAABAgMEBQYHCAkKC//EALUQAAIBAwMCBAMFBQQEAAABfQECAwAEEQUSITFBBhNRYQcicRQygZGhCCNCscEVUtHwJDNicoIJChYXGBkaJSYnKCkqNDU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6g4SFhoeIiYqSk5SVlpeYmZqio6Slpqeoqaqys7S1tre4ubrCw8TFxsfIycrS09TV1tfY2drh4uPk5ebn6Onq8fLz9PX29/j5+v/EAB8BAAMBAQEBAQEBAQEAAAAAAAABAgMEBQYHCAkKC//EALURAAIBAgQEAwQHBQQEAAECdwABAgMRBAUhMQYSQVEHYXETIjKBCBRCkaGxwQkjM1LwFWJy0QoWJDThJfEXGBkaJicoKSo1Njc4OTpDREVGR0hJSlNUVVZXWFlaY2RlZmdoaWpzdHV2d3h5eoKDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uLj5OXm5+jp6vLz9PX29/j5+v/aAAwDAQACEQMRAD8A+kaKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiigkDqcUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAVzHiy9kTbFbTbWUbiAec105OBmvPteuYzqdxJnL4JHPT2oA7qxZn0+3Z87jGpOfXFT1W01i2l2zMckxqf0qzQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUARzsEt5GY4AU815fDYLcs7yyFmllxkmu78VX/9n+H55QfmI2qPWuJ0iPfdWUD53bgSPxoA9JtI/Ks4Yx0VAP0qakUbVA9BiloAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKAOQ+Isypo0UZPzO/FZPg4G41iEy4b92WB+lN+J90FmtIM5yeRVz4e2xZppW/5Y/IPx5oA7uiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooA8p+JTM/iSKPPyhFIxXU/D+Hbpc8x/5ayAj8q4jxhcR3Pi1xlgAdpHXFem+F7ZLbw/bKibMrk570Aa9FFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABQTjrRUdwwS3kY9ApoA8Vuov7R8eyKrH/AF5zj0zXtcMYihRF4CgAV454eha7+IJYrkrMxx6ivZh0oAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACqWsuY9GunXgrGSKu1znjm5WDw3MpOC/A5oA434cQm58Q3Fy/Ow5B9zXqteffCuDbY3Mp+8xx+teg0AFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABXAfEm+T7MLZgx+U9D3rv68o8eyh9YuFaUAL0H4UAdL8NkA8P7guD0J9a7KuV+HysPDqNjCE8V1VABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAjcKT7V474kQ3WoXk7AZU855/CvWtQnW2sJZHfYFU815HqS7dAubr77TXAwCelAHo/g1Qnhu3UDtuJ+tb1Y3hVQPD1se5QZx9K2aACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKK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ooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKr31x9ms5JM4KqTQBxtw7al43hjc+ZHHKVZMcYFd0BgADoK4nwbYSXGqXeqyHKSMQpPrmu2oAKCcD0oqO4/49pOcfKeaAPL7ab7Z8QpcLuZZCAfXmtbxXefafEltZLynCNj1Nc/4ckKeL7qTriRst6VvaIg1zxbLeKvyR8kkfxDpQB3VnEYLOOIgDYoHFTUfWigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAK4/x5qEkFvFbQNtaUHJz+ldga486bPrviRZr6Ii2gOVPqR0oA2/DditjoVugGGdQ759SK1aAAoAAwB0AooAKq6kcaXck/wDPJv5Vaqnq3/IIucdfLP8AKgDxfT7tra7upI8hnJUZr07wPZC30c3BHzzncTivLLTzJdU2RqHcyfdA969w061Wy06GBeiLQBZooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACjGOlFFABRRRQAVV1M40u5J6CJv5VarL8S3K2vh28dzjdGVH1IoA8p8E2/2vxk7bmHluW4Havah0ryH4YQmTXbmQ5GFH869eoAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACuO+IV2YtNWBVDGQE4NdjXmPja8NxqLxAlivyqoNAC/DGIjULsgAfu14HbmvTa82+Gzyi8uI3AUgYPHWvSaACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigBshCxMWOABzmvLNhvdUvpsb1ETsCfUV6Lrchj0icg4yvWuM8PWiNpWp3LZ4Uge4xQBH8M3866vCQAyKMfnXo9eefDaJftl8wGCAMD8a9DoAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKAOb8Z3Ri0sQq2PMOG+lRadbeX4Km3YD+SxJH0rN8dTSx6hDtwUAHHrWzeq1n4Knx8v7k/wAqAML4aLh7wk5YgZP4139cB8MFzb3L5zuA5rv6ACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiig9KAOJ8QwDU/FltaxkHpk+mK3PFGR4VulUc+URz9KwLMNJ44Mm75hIQR14re8XMV8NXOO64PPagDnvhjFss5j/sgV3lcj8PIdmg714VmwB/XNddQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUyU4hcn0NPqG8O2ymJ7IaAOT8PhZvE9z5Q4jG5j9TVrx7KI/DzgkjdwMd6h8HQg315cA/fAX9aT4gsBpsQILAsBgUATfD7jwygBB+Y9K6mua8CRGLw7g/8APRj9K6WgAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigArO1y5W10mZ36FSo+prRrI8TjOiuAcHcKAKHgoZ06Rz94uc1R+IUxjht1Xr1rW8I8aQV7+YT0rnPiQ0gu7SNDw6H+dAHUeFBjQIjtC7jnArZqhokPkaJaIevlKT+VX6ACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACsLxQ+LFVzjJrdrnPFswS3jUnqegFAFrwzHs0vOc7mJrk/iQrtrGnMAwVFIx/e5rsvD67dJT61xHjK4kn8VW0LvujRgAuOnNAHoOnf8AIMtuMful49OKs1FaACzhA6bB/KpaACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACua8VYkaGIDDdd1dLXL+KDm7gVACxOOT0oA3NMh8jToxnOVzXnOvlZfGkTK4LCdV2j0r0mNjBpqHAYrGOhrzVT9o8eR7yCRICc96APUYxtjUYxgdKdRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAVy2tFTrCcZwwBB711Ncj4iLLq8O7bt3jBzyKAOmkAGnkEbRs6eleY6LAbjx8WTLfNuO7np6V6TeSrHpLMT8uzv9K4nwVEJvEEs/mBnjVgfxoA9DooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAK4/xo6wSQyng9c4/WuwrkvG1pfStbXFsA9ugKyp9T1oAd4gvlPguORJMmSMAEcZOKzfhvbBVupz99m5NYWp3Nxcx2mmkMEMnRe4r0jQdLTStLjhVQHIy5Hc0AaVFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABSOiyKVcBgeoNLRQBQTRbFLsXIhBkHTPIFX6KKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKAP/Z", 
+            generatedReport: null
+        };
+        window.State = State; // expose to global scope so inline oninput handlers can access it
+
+        // ── UI Helpers ──
+        const el = id => document.getElementById(id);
+        const overlay = (show, text = "") => {
+            el('global-overlay').style.display = show ? 'flex' : 'none';
+            if(text) el('overlay-text').textContent = text;
+        }
+        const showError = msg => {
+            const e = el('system-msg'); e.textContent = msg; e.style.display = 'block';
+            window.scrollTo(0, 0); setTimeout(() => e.style.display = 'none', 8000);
+        };
+        const today = () => new Date().toISOString().slice(0, 10);
+        const esc = s => String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+        // Set default dates
+        el('f-testingOrdered').value = today();
+        el('f-sampleReceived').value = today();
+        el('f-analysisDate').value = today();
+
+        // ── Form Logic: Results ──
+        window.renderResults = function () {
+            el("results-rows").innerHTML = State.results.map((r, i) => `
+              <div class="result-row">
+                <input class="input" style="flex:2;" placeholder="Test Label (e.g. Purity)" value="${esc(r.label)}" oninput="State.results[${i}].label=this.value" />
+                <input class="input" style="flex:1;" placeholder="Value (e.g. 99.4%)" value="${esc(r.value)}" oninput="State.results[${i}].value=this.value" />
+                <button class="btn-danger" onclick="removeResult(${i})">✕</button>
+              </div>
+            `).join("");
+        }
+        window.addResultRow = function () { State.results.push({ label: "", value: "" }); renderResults(); }
+        window.removeResult = function (i) { State.results.splice(i, 1); renderResults(); }
+        renderResults();
+
+        // ── Form Logic: Signature ──
+        el("f-sig-upload").addEventListener("change", (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = ev => {
+                State.signatureBase64 = ev.target.result;
+                el("f-sig-preview").src = State.signatureBase64;
+                el("f-sig-preview").style.display = "block";
+                el("f-sig-clear").style.display = "block";
+            };
+            reader.readAsDataURL(file);
+        });
+
+        window.clearSig = function () {
+            State.signatureBase64 = null;
+            el("f-sig-upload").value = "";
+            el("f-sig-preview").style.display = "none";
+            el("f-sig-clear").style.display = "none";
+        }
+
+        // ── Generate & Upload Logic ──
+        const genKey = () => Array.from({ length: 11 }, () => "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"[Math.random() * 32 | 0]).join("");
+
+        async function getNextTaskNumber() {
+            if (!db) throw new Error("Database not connected.");
+            const q = query(collection(db, "reports"), orderBy("taskNumber", "desc"), limit(1));
+            const snapshot = await getDocs(q);
+            if (snapshot.empty) return 90001;
+            return snapshot.docs[0].data().taskNumber + 1;
+        }
+
+        window.handleGenerate = async function () {
+            if (CLOUDINARY_CLOUD_NAME === "YOUR_CLOUD_NAME") {
+                return showError("Please enter your Cloudinary credentials in the code (line 228) before generating.");
+            }
+            if (!db) return showError("Firebase is not configured properly.");
+            
+            overlay(true, "Gathering Details...");
+
+            try {
+                const data = {
+                    labName: el('f-labName').value, labEmail: el('f-labEmail').value, labWeb: el('f-labWeb').value,
+                    testingOrdered: el('f-testingOrdered').value, sampleReceived: el('f-sampleReceived').value, analysisDate: el('f-analysisDate').value,
+                    client: el('f-client').value, sample: el('f-sample').value, manufacturer: el('f-manufacturer').value, batch: el('f-batch').value,
+                    sampleDescription: el('f-sampleDescription').value, testsRequested: el('f-testsRequested').value, comments: el('f-comments').value,
+                    results: State.results, signature: State.signatureBase64, createdAt: new Date().toISOString()
+                };
+
+                const uniqueKey = genKey();
+                const taskNumber = await getNextTaskNumber();
+                const finalReport = { ...data, uniqueKey, taskNumber };
+
+                // 1. Switch active view so HTML is visible
+                el('view-form').classList.remove('active');
+                el('view-preview').classList.add('active');
+                
+                // 2. Render layout
+                renderVisualReport(finalReport);
+                el('preview-key').textContent = uniqueKey;
+                el('preview-task').textContent = "#" + taskNumber;
+
+                // 3. Give 1.5s to render completely
+                overlay(true, "Rendering Virtual Image...");
+                await new Promise(r => setTimeout(r, 1500)); 
+
+                // 4. Capture Canvas
+                const canvas = await html2canvas(el('report-inner-wrapper'), {
+                    scale: 2, useCORS: true, allowTaint: true, backgroundColor: "#ffffff", logging: false
+                });
+                const imageBase64 = canvas.toDataURL("image/jpeg", 0.90);
+
+                // 5. Upload Image to Cloudinary
+                overlay(true, "Uploading to Cloudinary...");
+                try {
+                    const formData = new FormData();
+                    formData.append('file', imageBase64);
+                    formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+                    
+                    // You can pass the uniqueKey to Cloudinary to name the file automatically
+                    formData.append('public_id', `reports/${uniqueKey}`); 
+
+                    const cloudinaryRes = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const cloudinaryData = await cloudinaryRes.json();
+                    
+                    if (cloudinaryData.secure_url) {
+                        finalReport.reportImageUrl = cloudinaryData.secure_url;
+                    } else {
+                        throw new Error(cloudinaryData.error?.message || "Unknown error");
+                    }
+                } catch (cloudErr) {
+                    console.error("Cloudinary failed", cloudErr);
+                    throw new Error("Cloudinary Upload Failed: " + cloudErr.message);
+                }
+
+                // 6. Save Data Object to Firestore
+                overlay(true, "Saving Data to Firestore...");
+                await setDoc(doc(db, "reports", uniqueKey), finalReport);
+
+                // Success
+                State.generatedReport = finalReport;
+                overlay(false);
+                window.scrollTo(0, 0);
+
+            } catch (err) {
+                console.error(err);
+                overlay(false);
+                showError("Failed to generate report: " + err.message);
+                
+                // Revert interface
+                el('view-preview').classList.remove('active');
+                el('view-form').classList.add('active');
+            }
+        }
+
+        window.resetForm = function () {
+            el('f-client').value = ""; el('f-sample').value = ""; el('f-manufacturer').value = "";
+            el('f-batch').value = "Unknown"; el('f-comments').value = "";
+            State.results =[{ label: "Purity", value: "" }];
+            renderResults();
+            clearSig();
+            el('view-preview').classList.remove('active');
+            el('view-form').classList.add('active');
+            window.scrollTo(0, 0);
+        }
+
+        window.downloadReport = async function () {
+            const btn = el('btn-download');
+            btn.disabled = true; btn.textContent = "Processing...";
+            try {
+                const canvas = await html2canvas(el('report-inner-wrapper'), {
+                    scale: 2, useCORS: true, allowTaint: true, backgroundColor: "#ffffff", logging: false
+                });
+                const link = document.createElement("a");
+                link.download = `Report_${State.generatedReport.taskNumber}_${State.generatedReport.uniqueKey}.jpg`;
+                link.href = canvas.toDataURL("image/jpeg", 0.95);
+                link.click();
+            } catch (e) {
+                alert("Download failed.");
+            }
+            btn.disabled = false; btn.textContent = "⬇ Download JPG Again";
+        }
+
+        // ── HTML Template Builder ──
+        const fmtShort = iso => { const d = new Date((iso || today()) + "T12:00:00"); const M =["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]; return `${String(d.getDate()).padStart(2, "0")} ${M[d.getMonth()]} '${String(d.getFullYear()).slice(2)}`; }
+        const fmtLong = iso => { const d = new Date((iso || today()) + "T12:00:00"); const M =["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]; return `${String(d.getDate()).padStart(2, "0")} ${M[d.getMonth()]} ${d.getFullYear()}`; }
+        
+        const logoSVG = `<svg width="50" height="36" viewBox="0 0 50 36" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="22" width="7" height="13" fill="#3cb850" rx="1"/><rect x="12" y="14" width="7" height="21" fill="#3cb850" rx="1"/><rect x="22" y="8" width="7" height="27" fill="#3cb850" rx="1"/><rect x="32" y="16" width="7" height="19" fill="#3cb850" rx="1"/><rect x="42" y="4" width="7" height="31" fill="#3cb850" rx="1"/></svg>`;
+
+        function renderVisualReport(r) {
+            const sigHTML = r.signature
+                ? `<img src="${r.signature}" alt="Signature" style="height:80px;width:auto;object-fit:contain;margin-top:-20px;margin-left:10px;" />`
+                : `<svg class="signature-svg" width="80" height="80" viewBox="0 0 80 80"><path d="M40,75 Q42,10 45,60 Q48,45 52,55 Q55,48 60,52 Q65,48 70,50" fill="none" stroke="#666" stroke-width="1" stroke-linecap="round"/><path d="M42,80 L50,5" fill="none" stroke="#666" stroke-width="1"/><path d="M55,50 L65,45" fill="none" stroke="#666" stroke-width="1"/></svg>`;
+
+            const resRows = (r.results ||[]).map(res => `<tr><td>${esc(res.label)}</td><td>${esc(res.value)}</td></tr>`).join("");
+
+            const html = `
+            <div id="report-inner-wrapper" class="page">
+                <div class="header">
+                    <div class="header-title">TEST REPORT</div>
+                    <div class="header-logo" >
+                    <img src="${State.logoBase64}" alt="JANOSHIK logo" style="object-fit:contain; margin-bottom:-15px" />
+                    </div>
+                    <div class="header-contact">
+                        E-mail: ${esc(r.labEmail)}<br>
+                        Web: ${esc(r.labWeb)}
+                    </div>
+                </div>
+
+                <hr class="divider">
+
+                <div class="task-info">
+                    <div class="task-left">
+                        <div class="label">Task Number</div>
+                        <div class="value-box">#${esc(r.taskNumber)}</div>
+                    </div>
+                    <div class="task-right">
+                        <div class="task-row">
+                            <div class="label-small">Testing ordered ></div>
+                            <div class="value-box">${fmtShort(r.testingOrdered)}</div>
+                        </div>
+                        <div class="task-row">
+                            <div class="label-small">Sample received ></div>
+                            <div class="value-box">${fmtShort(r.sampleReceived)}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="details-grid">
+                    <div class="label-small">Client</div><div class="value-box">${esc(r.client)}</div>
+                    <div class="label-small">Sample</div><div class="value-box">${esc(r.sample)}</div>
+                    <div class="label-small">Manufacturer</div><div class="value-box">${esc(r.manufacturer)}</div>
+                    <div class="label-small">Batch</div><div class="value-box">${esc(r.batch)}</div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">Sample description ></div>
+                    <div class="section-content">${esc(r.sampleDescription)}</div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">Tests requested ></div>
+                    <div class="section-content">${esc(r.testsRequested)}</div>
+                </div>
+
+                <div class="section">
+                    <div class="results-header">
+                        <div class="section-title" style="margin-bottom: 0;">Results ></div>
+                        <div id="qr-container" class="qr-code"></div>
+                    </div>
+                    <table class="results-table">
+                        ${resRows}<tr><td></td><td></td></tr>
+                    </table>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">Comments ></div>
+                    <div class="section-content comments-content">${esc(r.comments)}</div>
+                </div>
+
+                <div class="footer">
+                    <div class="footer-left">
+                        <div class="label-small">Analysis conducted ></div>
+                        <div class="value-box">${fmtLong(r.analysisDate)}</div>
+                    </div>
+                    <div class="footer-right">
+                        <div class="label-small">Signature ></div>
+                        ${sigHTML}
+                    </div>
+                </div>
+
+                <div class="verification">
+                    <div class="verify-text">Verify this test at ${esc(r.labWeb)} with the following unique key</div>
+                    <div class="verify-key">${esc(r.uniqueKey)}</div>
+                </div>
+            </div>`;
+
+            el('report-container').innerHTML = html;
+
+            if (typeof QRCode !== "undefined") {
+                new QRCode(el("qr-container"), {
+                    text: `https://${r.labWeb}/?key=${r.uniqueKey}`,
+                    width: 45, height: 45, colorDark: "#000000", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.M,
+                });
+            }
+        }
+    </script>
+</body>
+</html>

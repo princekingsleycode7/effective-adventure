@@ -429,10 +429,24 @@
 
                     el('loading').style.display = 'none';
                     el('action-bar').style.display = 'flex';
-                    el('report-container').style.display = 'flex'; 
+                   el('report-container').style.display = 'flex'; 
                     
-                    // Trigger scaling logic after render
-                    setTimeout(scaleReport, 50);
+                    // Call immediately
+                    scaleReport();
+                    
+                    // Dynamically observe content reflows (fonts loading, image loading) 
+                    // and adjust wrapper bounds perfectly as the layout settles.
+                    const innerPage = document.getElementById('report-inner-wrapper');
+                    if (window.ResizeObserver && innerPage) {
+                        new ResizeObserver(() => {
+                            scaleReport();
+                        }).observe(innerPage);
+                    }
+
+                    // Fallback for ensuring images fire height calculations natively
+                    const imgs = innerPage.querySelectorAll('img');
+                    imgs.forEach(img => img.addEventListener('load', scaleReport));
+
                 } else {
                     showError();
                 }
