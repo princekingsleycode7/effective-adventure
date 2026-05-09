@@ -622,12 +622,12 @@
                 <fieldset>
                     <legend>LAB INFORMATION</legend>
                     <div class="grid-3">
-                        <div><label class="lbl">Lab Name</label><input class="input" id="f-labName" value="DRPEPTIDE" />
+                        <div><label class="lbl">Lab Name</label><input class="input" id="f-labName" value="DR PEPTIDE" />
                         </div>
                         <div><label class="lbl">Lab Email</label><input class="input" id="f-labEmail"
-                                value="info@drpeptide.com" /></div>
+                                value="info@jansohik.com" /></div>
                         <div><label class="lbl">Lab Website</label><input class="input" id="f-labWeb"
-                                value="janoshk.vercel.app" /></div>
+                                value="www.jansohik.com" /></div>
                     </div>
                 </fieldset>
 
@@ -1046,7 +1046,7 @@
                 </div>
 
                 <div class="verification">
-                    <div class="verify-text">Verify this test at ${esc(r.labWeb)} with the following unique key</div>
+                    <div class="verify-text">Verify this test at ${esc(r.labWeb)}/verify with the following unique key</div>
                     <div class="verify-key">${esc(r.uniqueKey)}</div>
                 </div>
             </div>`;
@@ -1055,7 +1055,7 @@
 
             if (typeof QRCode !== "undefined") {
                 new QRCode(el("qr-container"), {
-                    text: `https://${r.labWeb}/?key=${r.uniqueKey}`,
+                    text: `https://${r.labWeb}/verify/view-report.html?key=${r.uniqueKey}`,
                     width: 45, height: 45, colorDark: "#000000", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.M,
                 });
             }
