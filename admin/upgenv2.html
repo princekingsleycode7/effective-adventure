@@ -12,6 +12,24 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
+        @font-face {
+            font-family: 'Blogger Sans';
+            src: url('../Blogger%20Sans/OT-tt/Blogger%20Sans.ttf') format('truetype');
+            font-weight: 400;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'Blogger Sans';
+            src: url('../Blogger%20Sans/OT-tt/Blogger%20Sans-Medium.ttf') format('truetype');
+            font-weight: 500;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'Blogger Sans';
+            src: url('../Blogger%20Sans/OT-tt/Blogger%20Sans-Bold.ttf') format('truetype');
+            font-weight: 700;
+            font-style: normal;
+        }
         :root {
             --g: #4caf50;
             --g-light: #e8f5e9;
@@ -331,7 +349,7 @@
             min-width: 800px;
             padding: 40px 50px;
             box-sizing: border-box;
-            font-family: 'Open Sans', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Blogger Sans', 'Open Sans', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             text-align: left;
             margin: 0 auto;
@@ -954,7 +972,7 @@
 
                 <div class="section">
                     <div class="section-title">Sample description ></div>
-                    <div class="section-content">${esc(r.sampleDescription)}</div>
+                    <div class="section-content" style="font-size:24;">${esc(r.sampleDescription)}</div>
                 </div>
 
                 <div class="section">
