@@ -684,6 +684,19 @@
                     </div>
                 </fieldset>
 
+                <fieldset>
+                    <legend>PRODUCT IMAGES (Optional)</legend>
+                    <div style="margin-bottom: 8px; font-size: 13px; color: #666;">These images will be displayed on the verification page.</div>
+                    <div style="display:flex; flex-direction:column; gap:16px;">
+                        <input type="file" id="f-product-images" accept="image/png, image/jpeg, image/webp" multiple class="input"
+                            style="width: auto; background: transparent; border: none; padding: 0;" />
+                        <div id="f-product-preview-container" style="display: flex; gap: 10px; flex-wrap: wrap;"></div>
+                        <button class="btn-sec" id="f-product-clear"
+                            style="display:none; padding: 6px 12px; font-size: 12px; align-self: flex-start;"
+                            onclick="clearProductImages()">Remove All Product Images</button>
+                    </div>
+                </fieldset>
+
                 <div style="display: flex; justify-content: flex-end; border-top: 2px solid #eee; padding-top: 24px;">
                     <button class="btn" id="btn-generate" onclick="handleGenerate()">Save to Cloudinary &
                         Firebase</button>
@@ -754,6 +767,7 @@
 
         // ── Global State ──
         const State = {
+            productImages: [],
             results: [{ label: "Purity", value: "" }],
             logoBase64: "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/4QLiRXhpZgAATU0AKgAAAAgABAE7AAIAAAAIAAABSodpAAQAAAABAAABUpydAAEAAAAQAAACyuocAAcAAAEMAAAAPgAAAAAc6gAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQUNFUiBQQwAABZADAAIAAAAUAAACoJAEAAIAAAAUAAACtJKRAAIAAAADNjUAAJKSAAIAAAADNjUAAOocAAcAAAEMAAABlAAAAAAc6gAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMjAyNjowNTowNSAwNjo1NTo1NgAyMDI2OjA1OjA1IDA2OjU1OjU2AAAAQQBDAEUAUgAgAFAAQwAAAP/hBBpodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvADw/eHBhY2tldCBiZWdpbj0n77u/JyBpZD0nVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkJz8+DQo8eDp4bXBtZXRhIHhtbG5zOng9ImFkb2JlOm5zOm1ldGEvIj48cmRmOlJERiB4bWxuczpyZGY9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkvMDIvMjItcmRmLXN5bnRheC1ucyMiPjxyZGY6RGVzY3JpcHRpb24gcmRmOmFib3V0PSJ1dWlkOmZhZjViZGQ1LWJhM2QtMTFkYS1hZDMxLWQzM2Q3NTE4MmYxYiIgeG1sbnM6ZGM9Imh0dHA6Ly9wdXJsLm9yZy9kYy9lbGVtZW50cy8xLjEvIi8+PHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9InV1aWQ6ZmFmNWJkZDUtYmEzZC0xMWRhLWFkMzEtZDMzZDc1MTgyZjFiIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iPjx4bXA6Q3JlYXRlRGF0ZT4yMDI2LTA1LTA1VDA2OjU1OjU2LjY1NDwveG1wOkNyZWF0ZURhdGU+PC9yZGY6RGVzY3JpcHRpb24+PHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9InV1aWQ6ZmFmNWJkZDUtYmEzZC0xMWRhLWFkMzEtZDMzZDc1MTgyZjFiIiB4bWxuczpkYz0iaHR0cDovL3B1cmwub3JnL2RjL2VsZW1lbnRzLzEuMS8iPjxkYzpjcmVhdG9yPjxyZGY6U2VxIHhtbG5zOnJkZj0iaHR0cDovL3d3dy53My5vcmcvMTk5OS8wMi8yMi1yZGYtc3ludGF4LW5zIyI+PHJkZjpsaT5BQ0VSIFBDPC9yZGY6bGk+PC9yZGY6U2VxPg0KCQkJPC9kYzpjcmVhdG9yPjwvcmRmOkRlc2NyaXB0aW9uPjwvcmRmOlJERj48L3g6eG1wbWV0YT4NCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA8P3hwYWNrZXQgZW5kPSd3Jz8+/9sAQwAHBQUGBQQHBgUGCAcHCAoRCwoJCQoVDxAMERgVGhkYFRgXGx4nIRsdJR0XGCIuIiUoKSssKxogLzMvKjInKisq/9sAQwEHCAgKCQoUCwsUKhwYHCoqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioq/8AAEQgAcgC2AwEiAAIRAQMRAf/EAB8AAAEFAQEBAQEBAAAAAAAAAAABAgMEBQYHCAkKC//EALUQAAIBAwMCBAMFBQQEAAABfQECAwAEEQUSITFBBhNRYQcicRQygZGhCCNCscEVUtHwJDNicoIJChYXGBkaJSYnKCkqNDU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6g4SFhoeIiYqSk5SVlpeYmZqio6Slpqeoqaqys7S1tre4ubrCw8TFxsfIycrS09TV1tfY2drh4uPk5ebn6Onq8fLz9PX29/j5+v/EAB8BAAMBAQEBAQEBAQEAAAAAAAABAgMEBQYHCAkKC//EALURAAIBAgQEAwQHBQQEAAECdwABAgMRBAUhMQYSQVEHYXETIjKBCBRCkaGxwQkjM1LwFWJy0QoWJDThJfEXGBkaJicoKSo1Njc4OTpDREVGR0hJSlNUVVZXWFlaY2RlZmdoaWpzdHV2d3h5eoKDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uLj5OXm5+jp6vLz9PX29/j5+v/aAAwDAQACEQMRAD8A+kaKKKACiiigAooooAKKKKACiiigAooooAKKKKACiuL+I/i4eHtGNraP/p90NsYXqo9am+HGk3+m+GEfVbiWWe4PmFZDnYD2oMfap1PZr5nXUUUUGwUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFI7iNGdzhVGSao6brVjq3mixmDmJtrD0pXV7EuSTs2X6r3l/a6fB517OkMecbmNTswVSzHAHJNeI/EXxM2u6k1tasTY2xxx0ZvX+VTOfKjkxmKWGp83Xoe2xSpNEskTB0YZVh3qrqupQaRpk97dOFSJSee59K4z4W+I/t+jvp1y/760+7nun+c1z3jbW5PF3iy18OabJ/owl2uwPDtjJ/Lmjm0uS8ZF0FUju9l5mBpGpt4t+J9pc6ku+OSX5Y26KvYV7+AAABwBXi0Wl2+jfGSwsbRdscSoB7nb1r2mqQYJNKXNvcKKKKZ3hRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRVa/vEsbN5n6gfKPU0pSUVdhsc3401l4bcafZk+bJ9/HUD0rhvDOstofiKNpDthkPlyg9q6/RLRNRvL6/uvneNW2g9jiuTtdEOr6bqkkC7rm3k3pjqfavO5pTkqn3HhYr2jqRqR31t8jqPiN4rGm6b/AGfYyf6RcLywP3VrktT0WDTvhTDeKN1xdyK7v3xnpWXeaPf3Hh+bW9RMg2usSCQYLdf8K6bxN/yRvTPon862u5Nt9jknUliJVKk1b3dDndZsrzwutjqWkM0aX9vsYj+8cgj8qj8L6bcaX8SNKhvP9a58wg9tyE/1r2HQLSC68L6cLmJJQsYK7hnBrgdVGPjtZAcAEf8AouteW2p1Swqp8lRPRtafmR6j/wAl4tv+Afyr12vItR/5Lxbf8A/lXrtao9LC7z9WFFFFM7AooooAKKKKACiiigAooooAKKKKACiiigArA1RJNSuTCuRHGpJrfqOSJTHIEUBmUjOK569J1UlfTr5g7NWOU8LjFvqY9Aw/SqXw75utSz/z0p2lapa6UdSivX8tn3beOtHw5jdmv59pEbScE9656DVoL1PLTTq00vMn+J6qnglwihR5ycAY9a5zxN/yRvTPon866f4nRPL4Kl2KW2yqxx2HNcJrniGxvfhvp+k28ha7j2ho8cjBrom7SfocmNlGNWon1h+p6r4Y/wCRYsP+uQrzzVf+S72f1H/ouvRfDkbxeG7FJFKsIhkHtXm3i2ZdE+L1lql/lLU4O8DoNu3+davZHbiNKNNvo4iaj/yXi2/4B/KvXa8btbyLxD8aob3SiZrdACZAOAOvWvZKpGuEd+druwooopnaFFFFABRRRQAUUUUAFFFRz3EVrA81xIscaDLMxwAKAJKKrWOoWmpW/n2E8c8Wcbo2BGasOyojO5CqoySewoAWiqdhq9hqhkGn3cVwYzh/LcHbVygAoqjFrWnTai1hFeQvdJndEHG4fhV12VEZ3IVVGST2FAGXf+G9N1GbzbiD5u5XjNXrOyt7C2WC0iWONegUVHYarY6mHOn3UVwI22v5bA4NTXFzDaQmW5lSKNerOcAVKjFO6RChFPmS1FngiuYWhnRZI3GGVhkEVgWvgPQLTUPtcVkDIDlQ3Kg+wq0vi/QHkCLq1qWJwP3orYR1kQOjBlYZBB020wJWyJWyJWyJWyJWyJWyJWyJWyJW",
 
@@ -813,6 +827,42 @@
             el("f-sig-upload").value = "";
             el("f-sig-preview").style.display = "none";
             el("f-sig-clear").style.display = "none";
+        }
+
+        // ── Form Logic: Product Images ──
+        el("f-product-images").addEventListener("change", (e) => {
+            const files = Array.from(e.target.files);
+            if (!files.length) return;
+            
+            State.productImages = [];
+            el("f-product-preview-container").innerHTML = "";
+            
+            files.forEach((file, index) => {
+                const reader = new FileReader();
+                reader.onload = ev => {
+                    State.productImages.push(ev.target.result);
+                    
+                    const img = document.createElement("img");
+                    img.src = ev.target.result;
+                    img.style.height = "60px";
+                    img.style.border = "1px solid #ddd";
+                    img.style.padding = "2px";
+                    img.style.borderRadius = "4px";
+                    img.style.background = "#fff";
+                    
+                    el("f-product-preview-container").appendChild(img);
+                };
+                reader.readAsDataURL(file);
+            });
+            
+            el("f-product-clear").style.display = "block";
+        });
+
+        window.clearProductImages = function () {
+            State.productImages = [];
+            el("f-product-images").value = "";
+            el("f-product-preview-container").innerHTML = "";
+            el("f-product-clear").style.display = "none";
         }
 
         // ── Generate & Upload Logic ──
@@ -893,6 +943,32 @@
                     throw new Error("Cloudinary Upload Failed: " + cloudErr.message);
                 }
 
+                // 5.5 Upload Product Images to Cloudinary
+                if (State.productImages && State.productImages.length > 0) {
+                    overlay(true, `Uploading ${State.productImages.length} Product Image(s)...`);
+                    const productUrls = [];
+                    for (let i = 0; i < State.productImages.length; i++) {
+                        try {
+                            const pFormData = new FormData();
+                            pFormData.append('file', State.productImages[i]);
+                            pFormData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+                            pFormData.append('public_id', `reports/${uniqueKey}_product_${i}`);
+
+                            const pRes = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
+                                method: 'POST',
+                                body: pFormData
+                            });
+                            const pData = await pRes.json();
+                            if (pData.secure_url) {
+                                productUrls.push(pData.secure_url);
+                            }
+                        } catch (pErr) {
+                            console.error("Failed to upload product image", pErr);
+                        }
+                    }
+                    finalReport.productImageUrls = productUrls;
+                }
+
                 // 6. Save Data Object to Firestore
                 overlay(true, "Saving Data to Firestore...");
                 await setDoc(doc(db, "reports", uniqueKey), finalReport);
@@ -919,6 +995,7 @@
             State.results = [{ label: "Purity", value: "" }];
             renderResults();
             clearSig();
+            clearProductImages();
             el('view-preview').classList.remove('active');
             el('view-form').classList.add('active');
             window.scrollTo(0, 0);

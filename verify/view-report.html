@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
@@ -10,7 +11,8 @@
         body {
             font-family: 'Open Sans', sans-serif;
             background: #f2f4f2;
-            margin: 0; padding: 0;
+            margin: 0;
+            padding: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -30,7 +32,8 @@
             top: 0;
             z-index: 100;
         }
-          .btn92 {
+
+        .btn92 {
             color: rgb(160, 160, 160);
             border: none;
             outline: none;
@@ -38,8 +41,13 @@
             font-size: 14px;
             cursor: pointer;
         }
-        .action-bar-title { font-weight: 800; color: #c4c4c4; font-size: 16px; }
-        
+
+        .action-bar-title {
+            font-weight: 800;
+            color: #c4c4c4;
+            font-size: 16px;
+        }
+
         .btn-action {
             color: rgb(160, 160, 160);
             border: 1px solid #333;
@@ -51,8 +59,11 @@
             cursor: pointer;
             transition: all 0.2s;
         }
-        
-        .btn-action:hover { background: #333; color: #fff; }
+
+        .btn-action:hover {
+            background: #333;
+            color: #fff;
+        }
 
         /* ── IMAGE WRAPPER ── */
         .report-wrapper {
@@ -68,7 +79,7 @@
             width: 100%;
             height: auto;
             display: block;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
             border-radius: 4px;
             background: #fff;
         }
@@ -85,7 +96,10 @@
             margin-top: 60px;
         }
 
-        #error { color: #c62828; display: none; }
+        #error {
+            color: #c62828;
+            display: none;
+        }
 
         .loader {
             border: 4px solid #f3f3f3;
@@ -98,8 +112,13 @@
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
     </style>
 </head>
@@ -128,7 +147,11 @@
 
     <!-- Report Container -->
     <div class="report-wrapper" id="report-container">
-        <img id="final-report-image" class="report-image" src="" alt="Verified Lab Report" title="Click to download report" style="cursor:pointer;" />
+        <img id="final-report-image" class="report-image" src="" alt="Verified Lab Report"
+            title="Click to download report" style="cursor:pointer;" />
+        <div id="product-images-container"
+            style="display: flex; flex-direction: column; gap: 20px; align-items: center; margin-top: 40px; width: 100%;">
+        </div>
     </div>
 
     <script type="module">
@@ -159,7 +182,7 @@
 
                 if (docSnap.exists()) {
                     const data = docSnap.data();
-                    
+
                     if (data.reportImageUrl) {
                         const imgEl = document.getElementById('final-report-image');
                         imgEl.src = data.reportImageUrl;
@@ -168,7 +191,7 @@
                         imgEl.onclick = () => {
                             downloadImage(data.reportImageUrl, `Report_${data.taskNumber}_${key}.jpg`);
                         };
-                        
+
                         document.getElementById('btn-download').onclick = () => {
                             downloadImage(data.reportImageUrl, `Report_${data.taskNumber}_${key}.jpg`);
                         };
@@ -176,6 +199,26 @@
                         document.getElementById('loading').style.display = 'none';
                         document.getElementById('action-bar').style.display = 'flex';
                         document.getElementById('report-container').style.display = 'block';
+
+                        // Display product images if available
+                        if (data.productImageUrls && data.productImageUrls.length > 0) {
+                            const productContainer = document.getElementById('product-images-container');
+                            productContainer.innerHTML = ''; // clear any existing
+
+                            const header = document.createElement('h3');
+                            header.style.color = '#555';
+                            header.style.marginBottom = '10px';
+                            header.innerText = '';
+                            productContainer.appendChild(header);
+
+                            data.productImageUrls.forEach(url => {
+                                const pImg = document.createElement('img');
+                                pImg.src = url;
+                                pImg.className = 'report-image'; // re-use same styling as main report
+                                pImg.style.maxWidth = '100%';
+                                productContainer.appendChild(pImg);
+                            });
+                        }
                     } else {
                         showError();
                     }
@@ -213,4 +256,5 @@
         document.addEventListener("DOMContentLoaded", fetchReport);
     </script>
 </body>
+
 </html>
