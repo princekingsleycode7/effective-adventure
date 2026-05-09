@@ -658,18 +658,18 @@ var wpcf7_recaptcha = {
                     
                     // Inject success layout matching your site branding, colors, and layout structure
                     resultContainer.innerHTML = `
-                        <div class="mt-[30px] p-8 border-2 border-[#09AD9D] rounded-3xl bg-[#f0fdfa] transition-all duration-300" data-aos="fade-up">
-                            <h3 class="font-bold text-[20px] text-[#005758] mb-4">
+                        <div style="margin-top: 30px; padding: 32px; border: 2px solid #09AD9D; border-radius: 24px; background-color: #f0fdfa; transition: all 0.3s;">
+                            <h3 style="font-weight: bold; font-size: 20px; color: #005758; margin-bottom: 16px;">
                                 ✅ Authentic Report Verified
                             </h3>
-                            <p class="text-slate-600 mb-6 text-[15px] sm:text-[16px] leading-relaxed">
+                            <p style="color: #475569; margin-bottom: 24px; font-size: 16px; line-height: 1.6;">
                                 This test is in our database. You can open the generated report image in a new tab to verify the contents match your paper copy.
                             </p>
-                            <div class="flex flex-col sm:flex-row gap-[12px]">
-                                <button onclick="window.viewReport('${uniqueKey}')" class="button button-dark !bg-[#09AD9D] hover:!bg-[#005758] text-white font-bold transition-all duration-300 border-0 cursor-pointer">
+                            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                                <button onclick="window.viewReport('${uniqueKey}')" style="background-color: #09AD9D; color: white; font-weight: bold; padding: 12px 24px; border-radius: 8px; border: none; cursor: pointer; transition: background-color 0.3s;" onmouseover="this.style.backgroundColor='#005758'" onmouseout="this.style.backgroundColor='#09AD9D'">
                                     📄 View Report
                                 </button>
-                                <button onclick="window.resetVerification()" class="button button-dark !bg-[#1D1D1B] hover:!bg-black text-white font-bold transition-all duration-300 border-0 cursor-pointer">
+                                <button onclick="window.resetVerification()" style="background-color: #1D1D1B; color: white; font-weight: bold; padding: 12px 24px; border-radius: 8px; border: none; cursor: pointer; transition: background-color 0.3s;" onmouseover="this.style.backgroundColor='#000000'" onmouseout="this.style.backgroundColor='#1D1D1B'">
                                     ↺ Verify Another
                                 </button>
                             </div>
@@ -724,6 +724,7 @@ var wpcf7_recaptcha = {
         document.getElementById('unique_key').value = '';
         resultContainer.style.display = 'none';
         form.style.display = 'block';
+        submitBtn.style.display = 'block';
     };
 
     // Safely redirect to new tab report view passing key parameter

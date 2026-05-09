@@ -651,15 +651,18 @@ var wpcf7_recaptcha = {
                     
                     // Show the Success UI
                     resultContainer.innerHTML = `
-                        <div class="mt-[30px] p-6 border-2 border-[#09AD9D] rounded-lg bg-[#f0fdfa]">
-                            <h3 style="color: #09AD9D; font-size: 16px; font-weight: bold; margin-bottom: 20px;">
-                                 This test is in our database. You can open the report and check if the data match your report.
+                        <div style="margin-top: 30px; padding: 32px; border: 2px solid #09AD9D; border-radius: 24px; background-color: #f0fdfa; transition: all 0.3s;">
+                            <h3 style="font-weight: bold; font-size: 20px; color: #005758; margin-bottom: 16px;">
+                                ✅ Authentic Report Verified
                             </h3>
-                            <div class="flex gap-[15px]">
-                                <button onclick="viewReport('${uniqueKey}')" class="button button-dark" style="background: #09AD9D; color: white; border: none;">
+                            <p style="color: #475569; margin-bottom: 24px; font-size: 16px; line-height: 1.6;">
+                                This test is in our database. You can open the generated report image in a new tab to verify the contents match your paper copy.
+                            </p>
+                            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                                <button onclick="window.viewReport('${uniqueKey}')" style="background-color: #09AD9D; color: white; font-weight: bold; padding: 12px 24px; border-radius: 8px; border: none; cursor: pointer; transition: background-color 0.3s;" onmouseover="this.style.backgroundColor='#005758'" onmouseout="this.style.backgroundColor='#09AD9D'">
                                     📄 View Report
                                 </button>
-                                <button onclick="resetVerification()" class="button button-dark" style="background: #1D1D1B; color: white; border: none;">
+                                <button onclick="window.resetVerification()" style="background-color: #1D1D1B; color: white; font-weight: bold; padding: 12px 24px; border-radius: 8px; border: none; cursor: pointer; transition: background-color 0.3s;" onmouseover="this.style.backgroundColor='#000000'" onmouseout="this.style.backgroundColor='#1D1D1B'">
                                     ↺ Verify Another
                                 </button>
                             </div>
