@@ -1,1 +1,0 @@
-domain = janosh¡k.com
